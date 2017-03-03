@@ -1,3 +1,3 @@
 # Elm Demo Game
 
-> Play it [here] [here](http://noahsug.github.io/elm-demo)
+> Play it [here](http://noahsug.github.io/elm-demo)
