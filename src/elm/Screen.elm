@@ -3,6 +3,7 @@ module Screen exposing (..)
 import Window
 
 
+scaleConstant : Float
 scaleConstant =
     sqrt (400 * 711)
 
@@ -13,6 +14,7 @@ type alias Model =
     }
 
 
+init : Model
 init =
     { actualWidth = 0
     , actualHeight = 0
