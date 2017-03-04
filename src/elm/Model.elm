@@ -1,12 +1,11 @@
-port module Model exposing (..)
+port module Model exposing (Model)
 
-import Entity
+import Game.Model as Game
 import Screen
 
 
 type alias Model =
-    { hero : Entity.Model
-    , creeps : List Entity.Model
-    , timeUntilSpawn : Float
+    { timeUntilGameUpdate : Float
+    , game : Game.Model
     , screen : Screen.Model
     }

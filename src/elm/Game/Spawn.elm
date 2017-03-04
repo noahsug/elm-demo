@@ -1,0 +1,39 @@
+module Spawn exposing (..)
+
+
+-- maybeSpawnCreeps : Float -> Model -> Model
+-- maybeSpawnCreeps dt model =
+--     let
+--         ( shouldSpawn, newTicksUntilSpawn ) =
+--             shouldSpawnCreeps dt model
+--
+--         spawn =
+--             if shouldSpawn then
+--                 [ spawnCreep ]
+--             else
+--                 []
+--     in
+--         { model
+--             | creeps = model.creeps ++ spawn
+--             , ticksUntilSpawn = newTicksUntilSpawn
+--         }
+--
+--
+-- shouldSpawnCreeps : Float -> Model -> ( Bool, Float )
+-- shouldSpawnCreeps dt model =
+--     let
+--         timeLeft =
+--             model.timeUntilSpawn - dt
+--     in
+--         if timeLeft < 0 then
+--             ( True, timeLeft + Config.creepSpawnRate )
+--         else
+--             ( False, timeLeft )
+--
+--
+-- spawnCreep : Entity.Model
+-- spawnCreep =
+--     { x = Config.creepSpawnX
+--     , y = Config.creepSpawnY
+--     , rotation = 0
+--     }

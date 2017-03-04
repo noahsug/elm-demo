@@ -2,14 +2,15 @@ port module Main exposing (..)
 
 import AnimationFrame
 import Config
-import Entity
+import Game.Model as Game
+import Game.State
 import Html
-import Model exposing (..)
+import Model exposing (Model)
 import Msg exposing (..)
 import Screen
 import Task
 import Time
-import View exposing (..)
+import View exposing (view)
 import Window
 
 
@@ -33,9 +34,8 @@ subscriptions model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { hero = Entity.Model 0 0 0
-      , creeps = []
-      , timeUntilSpawn = 0
+    ( { timeUntilGameUpdate = 0
+      , game = Game.State.init
       , screen = Screen.init
       }
     , Task.perform Resize Window.size
@@ -50,92 +50,29 @@ update msg model =
                 dt =
                     Time.inSeconds time
 
-                newModel =
-                    model
-                        |> maybeSpawnCreeps dt
-                        |> moveHero dt
-                        |> moveCreeps dt
+                ( timeUntilGameUpdate, game ) =
+                    maybeUpdateGame dt model
             in
-                ( newModel, Cmd.none )
+                ( { model
+                    | game = game
+                    , timeUntilGameUpdate = timeUntilGameUpdate
+                  }
+                , Cmd.none
+                )
 
         Resize size ->
             ( { model | screen = Screen.resize size model.screen }, Cmd.none )
 
 
-maybeSpawnCreeps : Float -> Model -> Model
-maybeSpawnCreeps dt model =
+maybeUpdateGame : Float -> Model -> ( Float, Game.Model )
+maybeUpdateGame dt model =
     let
-        ( shouldSpawn, newTimeUntilSpawn ) =
-            shouldSpawnCreeps dt model
-
-        spawn =
-            if shouldSpawn then
-                [ spawnCreep ]
-            else
-                []
+        timeUntilGameUpdate =
+            model.timeUntilGameUpdate - dt
     in
-        { model
-            | creeps = model.creeps ++ spawn
-            , timeUntilSpawn = newTimeUntilSpawn
-        }
-
-
-shouldSpawnCreeps : Float -> Model -> ( Bool, Float )
-shouldSpawnCreeps dt model =
-    let
-        timeLeft =
-            model.timeUntilSpawn - dt
-    in
-        if timeLeft < 0 then
-            ( True, timeLeft + Config.creepSpawnRate )
+        if timeUntilGameUpdate <= 0 then
+            ( timeUntilGameUpdate + Config.gameUpdateTime
+            , Game.State.update model.game
+            )
         else
-            ( False, timeLeft )
-
-
-spawnCreep : Entity.Model
-spawnCreep =
-    { x = Config.creepSpawnX
-    , y = Config.creepSpawnY
-    , rotation = 0
-    }
-
-
-moveHero : Float -> Model -> Model
-moveHero dt model =
-    { model
-        | hero =
-            model.hero
-                |> rotateHero dt
-                |> Entity.move (Config.speed * dt)
-    }
-
-
-moveCreeps : Float -> Model -> Model
-moveCreeps dt model =
-    let
-        rotation =
-            Config.rotations * (2 * pi * dt)
-    in
-        { model
-            | creeps =
-                model.creeps
-                    |> List.map
-                        (Entity.move (Config.speed * dt)
-                            << Entity.rotateTowards
-                                rotation
-                                model.hero.x
-                                model.hero.y
-                        )
-        }
-
-
-rotateHero : Float -> Entity.Model -> Entity.Model
-rotateHero dt entity =
-    let
-        maxRotation =
-            Config.rotations * (2 * pi * dt)
-
-        newRotation =
-            entity.rotation + maxRotation
-    in
-        { entity | rotation = newRotation }
+            ( timeUntilGameUpdate, model.game )
