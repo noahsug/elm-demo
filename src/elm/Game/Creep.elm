@@ -1,4 +1,19 @@
-module Creep exposing (..)
+module Game.Creep exposing (create, act)
+
+import Game.Model exposing (..)
+
+create : Entity
+create =
+    { action = MOVE
+    , direction = RIGHT
+    , x = -15
+    , y = 0
+    }
+
+
+act : Model -> Entity -> Entity
+act model creep =
+    creep
 
 -- moveCreeps : Float -> Model -> Model
 -- moveCreeps dt model =

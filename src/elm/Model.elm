@@ -1,8 +1,7 @@
-port module Model exposing (Model)
+port module Model exposing (..)
 
 import Game.Model as Game
 import Screen
-
 
 type alias Model =
     { timeUntilGameUpdate : Float
