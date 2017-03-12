@@ -30,9 +30,27 @@ normalizeTo normal value =
         normal
 
 
-sign : Float -> Int
+signf : Float -> Int
+signf value =
+    if value < 0 then
+        -1
+    else
+        1
+
+
+sign : Int -> Int
 sign value =
     if value < 0 then
         -1
     else
         1
+
+
+isNothing : Maybe a -> Bool
+isNothing maybe =
+    case maybe of
+        Just _ ->
+            False
+
+        Nothing ->
+            True

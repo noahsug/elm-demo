@@ -2,16 +2,24 @@ module Game.Model exposing (..)
 
 
 type Direction
-    = UP
-    | DOWN
-    | LEFT
-    | RIGHT
+    = Up
+    | Down
+    | Left
+    | Right
 
 
 type Action
-    = BUILD
-    | MOVE
-    | NONE
+    = NoAction
+    | Move
+    | Build
+    | Attack
+    | KillHero
+
+
+type EntityType
+    = Hero
+    | Creep
+    | Block
 
 
 type alias Entity =
@@ -19,6 +27,7 @@ type alias Entity =
     , direction : Direction
     , x : Int
     , y : Int
+    , kind : EntityType
     }
 
 
@@ -27,9 +36,3 @@ type alias Model =
     , creeps : List Entity
     , blocks : List Entity
     }
-
-
-
---    { hero : Entity.Model
---    , creeps : List Entity.Model
---    , ticksUntilSpawn : Int

@@ -26,10 +26,13 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ AnimationFrame.diffs Tick
-        , Window.resizes Resize
-        ]
+    if model.runUntil > 0 then
+        Sub.batch
+            [ AnimationFrame.diffs Tick
+            , Window.resizes Resize
+            ]
+    else
+        Sub.none
 
 
 init : ( Model, Cmd Msg )
@@ -37,6 +40,7 @@ init =
     ( { timeUntilGameUpdate = 0
       , game = Game.State.init
       , screen = Screen.init
+      , runUntil = Config.gameUpdateTime * 60
       }
     , Task.perform Resize Window.size
     )
@@ -56,6 +60,7 @@ update msg model =
                 ( { model
                     | game = game
                     , timeUntilGameUpdate = timeUntilGameUpdate
+                    , runUntil = model.runUntil - dt
                   }
                 , Cmd.none
                 )

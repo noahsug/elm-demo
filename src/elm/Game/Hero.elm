@@ -5,10 +5,11 @@ import Game.Model exposing (..)
 
 create : Entity
 create =
-    { action = NONE
-    , direction = DOWN
+    { action = NoAction
+    , direction = Down
     , x = 0
     , y = 0
+    , kind = Hero
     }
 
 
@@ -19,40 +20,14 @@ act model =
             model.hero
 
         ( action, direction ) =
-            case (hero.action, hero.direction) of
-                (MOVE, UP) ->
-                    ( BUILD, LEFT )
+            case ( hero.action, hero.direction ) of
+                ( Move, Up ) ->
+                    ( Build, Left )
 
-                (BUILD, LEFT) ->
-                    ( MOVE, RIGHT )
+                ( Build, Left ) ->
+                    ( Move, Right )
 
                 _ ->
-                    ( MOVE, UP )
+                    ( Move, Up )
     in
         { hero | action = action, direction = direction }
-
-
-
--- moveHero : Float -> Model -> Model
--- moveHero dt model =
---     { model
---         | hero =
---             model.hero
---                 |> rotateHero dt
---                 |> Entity.move (Config.speed * dt)
---     }
---
---
---
---
---
--- rotateHero : Float -> Entity.Model -> Entity.Model
--- rotateHero dt entity =
---     let
---         maxRotation =
---             Config.rotations * (2 * pi * dt)
---
---         newRotation =
---             entity.rotation + maxRotation
---     in
---         { entity | rotation = newRotation }

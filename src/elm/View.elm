@@ -5,7 +5,7 @@ import Color
 import Config exposing (gridSize)
 import Element
 import Game.Model exposing (Entity, Action(..))
-import Game.State exposing (directionXY)
+import Game.Utils exposing (directionToXY)
 import Html
 import Model exposing (Model)
 import Msg exposing (..)
@@ -43,7 +43,7 @@ drawCreep model creep =
 
 drawBlock : Model -> Entity -> Collage.Form
 drawBlock model block =
-    Collage.ngon 4 (Screen.toActual model.screen (1.4 *  gridSize / 2))
+    Collage.ngon 4 (Screen.toActual model.screen (1.4 * gridSize / 2))
         |> Collage.filled Color.gray
         |> Collage.rotate (degrees 45)
         |> Collage.move
@@ -54,11 +54,11 @@ entityX : Model -> Entity -> Float
 entityX model entity =
     let
         dx =
-            Tuple.first (directionXY entity.direction)
+            Tuple.first (directionToXY entity.direction)
 
         x =
             case entity.action of
-                MOVE ->
+                Move ->
                     interpolate model (toFloat dx) (toFloat entity.x)
 
                 _ ->
@@ -71,11 +71,11 @@ entityY : Model -> Entity -> Float
 entityY model entity =
     let
         dy =
-            Tuple.second (directionXY entity.direction)
+            Tuple.second (directionToXY entity.direction)
 
         y =
             case entity.action of
-                MOVE ->
+                Move ->
                     interpolate model (toFloat dy) (toFloat entity.y)
 
                 _ ->

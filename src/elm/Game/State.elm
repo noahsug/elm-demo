@@ -1,8 +1,10 @@
-module Game.State exposing (init, update, directionXY)
+module Game.State exposing (init, update)
 
 import Game.Creep as Creep
 import Game.Hero as Hero
 import Game.Model exposing (..)
+import Game.Utils exposing (facing)
+import List.Extra
 
 
 init : Model
@@ -16,101 +18,111 @@ init =
 update : Model -> Model
 update model =
     model
+        |> execute
+        |> pick
         |> resolve
-        |> act
 
 
-resolve : Model -> Model
-resolve model =
+execute : Model -> Model
+execute model =
     let
+        unattackedBlocks =
+            removeBlocks model
+
         hero =
             move model.hero
 
         creeps =
             List.map move model.creeps
 
-        blocks =
-            maybeSpawnBlocks model
+        spawnedBlocks =
+            spawnBlocks creeps model.hero
     in
         { model
             | hero = hero
             , creeps = creeps
-            , blocks = blocks
+            , blocks = unattackedBlocks ++ spawnedBlocks
         }
 
 
 move : Entity -> Entity
 move entity =
     let
-        ( dx, dy ) =
-            directionXY entity.direction
+        ( x, y ) =
+            facing entity
     in
         case entity.action of
-            MOVE ->
-                { entity | x = entity.x + dx, y = entity.y + dy }
+            Move ->
+                { entity | x = x, y = y }
 
             _ ->
                 entity
 
 
-maybeSpawnBlocks : Model -> List Entity
-maybeSpawnBlocks model =
-    let
-        ( dx, dy ) =
-            directionXY model.hero.direction
-
-        x = model.hero.x + dx
-
-        y = model.hero.y + dy
-    in
+removeBlocks : Model -> List Entity
+removeBlocks model =
+    List.Extra.filterNot
+        (\b ->
+            List.any (isAttackingEntity b) model.creeps
+        )
         model.blocks
-            ++ case model.hero.action of
-                BUILD ->
+
+
+isAttackingEntity : Entity -> Entity -> Bool
+isAttackingEntity target creep =
+    case creep.action of
+        Attack ->
+            facing creep == ( target.x, target.y )
+
+        _ ->
+            False
+
+
+spawnBlocks : List Entity -> Entity -> List Entity
+spawnBlocks creeps hero =
+    let
+        ( x, y ) =
+            facing hero
+    in
+        case hero.action of
+            Build ->
+                -- If a creep moved into where hero is building, destroy that
+                -- building.
+                if List.any (\c -> c.x == x && c.y == y) creeps then
+                    []
+                else
                     [ createBlock x y ]
 
-                _ ->
-                    []
+            _ ->
+                []
 
 
 createBlock : Int -> Int -> Entity
 createBlock x y =
-    { action = NONE
-    , direction = DOWN
+    { action = NoAction
+    , direction = Down
     , x = x
     , y = y
+    , kind = Block
     }
 
 
-act : Model -> Model
-act model =
+pick : Model -> Model
+pick model =
     { model
         | hero = Hero.act model
         , creeps = List.map (Creep.act model) model.creeps
     }
 
 
-directionXY : Direction -> ( Int, Int )
-directionXY dir =
-    case dir of
-        UP ->
-            ( 0, 1 )
-
-        DOWN ->
-            ( 0, -1 )
-
-        LEFT ->
-            ( -1, 0 )
-
-        RIGHT ->
-            ( 1, 0 )
+resolve : Model -> Model
+resolve model =
+    { model | hero = maybeKillHero model.creeps model.hero }
 
 
-
---     let
---         (creeps, ticksUntilSpawn) = Spawn.maybeSpawnCreep model
---     in
---
---         { model
---             , ticksUntilSpawn = ticksUntilSpawn
---             , creeps = List.map (Creep.move model) creeps
---             , hero = Hero.move model }
+maybeKillHero : List Entity -> Entity -> Entity
+maybeKillHero creeps hero =
+    if List.any (\c -> c.action == KillHero) creeps then
+        { hero | action = NoAction }
+    else
+        hero

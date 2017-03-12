@@ -7,4 +7,5 @@ type alias Model =
     { timeUntilGameUpdate : Float
     , game : Game.Model
     , screen : Screen.Model
+    , runUntil : Float
     }
