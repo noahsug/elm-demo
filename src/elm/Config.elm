@@ -3,7 +3,8 @@ module Config exposing (..)
 -- Controls zoom level.
 screenSurfaceArea : Int
 screenSurfaceArea =
-  400 * 711
+    400 * 711
+
 
 
 -- Size of single block in the game grid.
@@ -11,31 +12,17 @@ gridSize : Float
 gridSize =
     15
 
+
+
+-- Radius area hero can travel and where creeps cannot be spawned, in grid
+-- units.
+heroRadius : Int
+heroRadius =
+    10
+
+
+
 -- Seconds until the game logic updates.
 gameUpdateTime : Float
 gameUpdateTime =
-  0.35
-
--- speed : Float
--- speed =
---     100
---
---
--- rotations : Float
--- rotations =
---     0.25
---
---
--- creepSpawnX : Float
--- creepSpawnX =
---     -250
---
---
--- creepSpawnY : Float
--- creepSpawnY =
---     0
---
---
--- creepSpawnRate : Float
--- creepSpawnRate =
---     3
+    0.35

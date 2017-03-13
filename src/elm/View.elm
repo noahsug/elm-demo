@@ -2,7 +2,7 @@ module View exposing (view)
 
 import Collage
 import Color
-import Config exposing (gridSize)
+import Config exposing (gridSize, heroRadius)
 import Element
 import Game.Model exposing (Entity, Action(..))
 import Game.Utils exposing (directionToXY)
@@ -18,33 +18,60 @@ view model =
         (Collage.collage
             (Screen.actualWidth model.screen)
             (Screen.actualHeight model.screen)
-            ([ drawHero model ]
+            (drawBackground model
+                ++ drawHero model
                 ++ List.map (drawCreep model) model.game.creeps
                 ++ List.map (drawBlock model) model.game.blocks
             )
         )
 
 
-drawHero : Model -> Collage.Form
+drawBackground : Model -> List Collage.Form
+drawBackground model =
+    -- Background Color
+    [ Collage.rect
+        (toFloat (Screen.actualWidth model.screen))
+        (toFloat (Screen.actualHeight model.screen))
+        |> Collage.filled (Color.rgb 21 27 31)
+      -- Hero Radius
+    , Collage.circle
+        (Screen.toActual model.screen
+            (gridSize * (toFloat heroRadius))
+        )
+        |> Collage.filled (Color.rgba 255 255 255 0.1)
+    ]
+
+
+drawHero : Model -> List Collage.Form
 drawHero model =
-    Collage.circle (Screen.toActual model.screen (gridSize / 2))
-        |> Collage.filled Color.black
+    [ Collage.circle
+        (Screen.toActual model.screen
+            (gridSize / 2)
+        )
+        |> Collage.filled Color.gray
         |> Collage.move
             ( entityX model model.game.hero, entityY model model.game.hero )
+    ]
 
 
 drawCreep : Model -> Entity -> Collage.Form
 drawCreep model creep =
-    Collage.circle (Screen.toActual model.screen (gridSize / 2))
-        |> Collage.filled Color.red
+    Collage.circle
+        (Screen.toActual model.screen
+            (gridSize / 2)
+        )
+        |> Collage.filled (Color.rgb 255 112 67)
         |> Collage.move
             ( entityX model creep, entityY model creep )
 
 
 drawBlock : Model -> Entity -> Collage.Form
 drawBlock model block =
-    Collage.ngon 4 (Screen.toActual model.screen (1.4 * gridSize / 2))
-        |> Collage.filled Color.gray
+    Collage.ngon 4
+        (Screen.toActual model.screen
+            (1.4 * gridSize / 2)
+        )
+        |> Collage.filled (Color.rgb 141 110 99)
         |> Collage.rotate (degrees 45)
         |> Collage.move
             ( entityX model block, entityY model block )
@@ -94,25 +121,3 @@ gridToActual model gridValue =
     gridValue
         |> (*) gridSize
         |> Screen.toActual model.screen
-
-
-
--- drawHero : Model -> Collage.Form
--- drawHero model =
---     Collage.circle (Screen.toActual model.screen 15)
---         |> Collage.filled Color.black
---         |> Collage.move
---             ( Screen.toActual model.screen 0
---             , Screen.toActual model.screen 0
---             )
---         |> Collage.rotate (degrees 45)
---
---
--- drawCreep : Model -> Entity.Model -> Collage.Form
--- drawCreep model entity =
---     Collage.circle (Screen.toActual model.screen 15)
---         |> Collage.filled Color.red
---         |> Collage.move
---             ( Screen.toActual model.screen entity.x
---             , Screen.toActual model.screen entity.y
---             )

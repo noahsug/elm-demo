@@ -1,9 +1,9 @@
-module Game.Creep exposing (create, act)
+module Game.Creep exposing (create, makeChoice)
 
 import Game.Model exposing (..)
 import Game.Grid as Grid
 import Utils exposing (isNothing, sign)
-import Game.Utils exposing (xyToDirection)
+import Game.Utils exposing (xyToDirection, facing)
 
 
 create : Entity
@@ -16,8 +16,8 @@ create =
     }
 
 
-act : Model -> Entity -> Entity
-act model creep =
+makeChoice : Model -> Entity -> Entity
+makeChoice model creep =
     let
         dx =
             model.hero.x - creep.x
@@ -42,8 +42,10 @@ act model creep =
     in
         if isKind Hero collideX then
             { creep | action = KillHero, direction = xyToDirection dx 0 }
-        else if isKind Hero collideX then
+        else if isKind Hero collideY then
             { creep | action = KillHero, direction = xyToDirection 0 dy }
+        else if canKillHeroWithoutMoving model creep then
+            { creep | action = NoAction }
         else if moveX && collideX == Nothing then
             { creep | action = Move, direction = xyToDirection dx 0 }
         else if not moveX && collideY == Nothing then
@@ -59,6 +61,24 @@ act model creep =
         else
             { creep | action = NoAction }
 
+
+canKillHeroWithoutMoving : Model -> Entity -> Bool
+canKillHeroWithoutMoving model creep =
+    case model.hero.action of
+        Move ->
+            let
+                (heroX, heroY) = facing model.hero
+
+                dx = heroX - creep.x
+
+                dy = heroY - creep.y
+            in
+                if (abs dx) + (abs dy) == 1 then
+                      True
+                else
+                    False
+        _ ->
+            False
 
 isKind : EntityType -> Maybe Entity -> Bool
 isKind kind maybeEntity =

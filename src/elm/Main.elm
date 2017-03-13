@@ -14,6 +14,7 @@ import View exposing (view)
 import Window
 
 
+
 main : Program Never Model Msg
 main =
     Html.program
@@ -40,7 +41,7 @@ init =
     ( { timeUntilGameUpdate = 0
       , game = Game.State.init
       , screen = Screen.init
-      , runUntil = Config.gameUpdateTime * 60
+      , runUntil = Config.gameUpdateTime * 100
       }
     , Task.perform Resize Window.size
     )

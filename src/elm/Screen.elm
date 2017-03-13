@@ -1,7 +1,7 @@
 module Screen exposing (..)
 
-import Window
 import Config
+import Window
 
 
 scaleConstant : Float
@@ -22,6 +22,7 @@ init =
     }
 
 
+resize : Window.Size -> Model -> Model
 resize { width, height } model =
     { model | actualWidth = width, actualHeight = height }
 
@@ -31,10 +32,12 @@ toActual model value =
     (scale model) * value
 
 
+width : Model -> Float
 width model =
     toFloat model.actualWidth / scale model
 
 
+height : Model -> Float
 height model =
     toFloat model.actualHeight / scale model
 
@@ -46,9 +49,11 @@ scale model =
         / scaleConstant
 
 
+actualWidth : Model -> Int
 actualWidth model =
     model.actualWidth
 
 
+actualHeight : Model -> Int
 actualHeight model =
     model.actualHeight

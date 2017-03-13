@@ -35,4 +35,5 @@ type alias Model =
     { hero : Entity
     , creeps : List Entity
     , blocks : List Entity
+    , gameOver : Bool
     }
