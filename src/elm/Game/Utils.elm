@@ -38,3 +38,18 @@ facing entity =
             directionToXY entity.direction
     in
         ( entity.x + x, entity.y + y )
+
+
+position : Entity -> ( Int, Int )
+position entity =
+    ( entity.x, entity.y )
+
+
+nextPosition : Entity -> ( Int, Int )
+nextPosition entity =
+    case entity.action of
+        Move ->
+            facing entity
+
+        _ ->
+            position entity

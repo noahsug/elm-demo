@@ -56,7 +56,7 @@ makeChoice model creep =
             { creep | action = Move, direction = xyToDirection 0 dy }
         else if moveX && isKind Block collideX then
             { creep | action = Attack, direction = xyToDirection dx 0 }
-        else if moveX && isKind Block collideY then
+        else if isKind Block collideY then
             { creep | action = Attack, direction = xyToDirection 0 dy }
         else
             { creep | action = NoAction }

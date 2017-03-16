@@ -54,3 +54,7 @@ isNothing maybe =
 
         Nothing ->
             True
+
+(?) : Maybe a -> a -> a
+(?) maybe default =
+    Maybe.withDefault default maybe

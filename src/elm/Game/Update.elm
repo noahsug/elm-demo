@@ -1,7 +1,8 @@
 module Game.Update exposing (execute, resolve)
 
+import Game.Block as Block
 import Game.Model exposing (..)
-import Game.Utils exposing (facing)
+import Game.Utils exposing (facing, nextPosition)
 import List.Extra
 
 
@@ -12,7 +13,7 @@ execute model =
             removeBlocks model
 
         hero =
-            (Debug.log "moved" (move model.hero))
+            move model.hero
 
         creeps =
             List.map move model.creeps
@@ -67,12 +68,11 @@ spawnBlocks creeps hero =
 
 createBlock : Int -> Int -> Entity
 createBlock x y =
-    { action = NoAction
-    , direction = Down
-    , x = x
-    , y = y
-    , kind = Block
-    }
+    let
+        block =
+            Block.create
+    in
+        { block | x = x, y = y }
 
 
 move : Entity -> Entity
@@ -116,10 +116,10 @@ recursiveStopSameSquareMovement entities =
         _ :: [] ->
             entities
 
-        entity :: rest ->
+        entity :: entityList ->
             let
                 fixedEntityList =
-                    recursiveStopSameSquareMovement rest
+                    recursiveStopSameSquareMovement entityList
 
                 fixedEntity =
                     if willCollide fixedEntityList entity then
@@ -136,7 +136,7 @@ recursiveStopSameSquareMovement entities =
 willCollide : List Entity -> Entity -> Bool
 willCollide entityList entity =
     List.any
-        (\e -> (facing entity) == (facing e))
+        (\listEntity -> nextPosition entity == nextPosition listEntity)
         entityList
 
 
