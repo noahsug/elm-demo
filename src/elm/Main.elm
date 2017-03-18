@@ -41,7 +41,7 @@ init =
     ( { timeUntilGameUpdate = 0
       , game = Game.State.init
       , screen = Screen.init
-      , runUntil = Config.gameUpdateTime * 100
+      , runUntil = Config.gameUpdateTime * 40
       }
     , Task.perform Resize Window.size
     )
@@ -53,7 +53,7 @@ update msg model =
         Tick time ->
             let
                 dt =
-                    Time.inSeconds time
+                    min (Time.inSeconds time) 0.1
 
                 ( timeUntilGameUpdate, game ) =
                     maybeUpdateGame dt model

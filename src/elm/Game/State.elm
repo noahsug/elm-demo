@@ -9,7 +9,7 @@ import Game.Update as Update
 init : Model
 init =
     { hero = Hero.create
-    , creeps = [ Creep.create ]
+    , creeps = [ Creep.create, Creep.create2 ]
     , blocks = []
     , gameOver = False
     }

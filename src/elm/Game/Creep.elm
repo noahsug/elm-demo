@@ -1,9 +1,8 @@
-module Game.Creep exposing (create, makeChoice)
+module Game.Creep exposing (create, create2, makeChoice)
 
 import Game.Model exposing (..)
 import Game.Grid as Grid
-import Utils exposing (isNothing, sign)
-import Game.Utils exposing (xyToDirection, facing)
+import Game.Utils exposing (xyToDirection, facing, position)
 
 
 create : Entity
@@ -12,7 +11,31 @@ create =
     , direction = Right
     , x = -6
     , y = 0
+    , px = -6
+    , py = 0
     , kind = Creep
+    , health = 1
+    }
+
+
+create2 : Entity
+create2 =
+    { action = Move
+    , direction = Right
+    , x = 6
+    , y = 6
+    , px = 6
+    , py = 6
+    , kind = Creep
+    , health = 1
+    }
+
+
+type alias Movement =
+    { x : Int
+    , y : Int
+    , direction : Direction
+    , collide : Maybe Entity
     }
 
 
@@ -25,41 +48,17 @@ makeChoice model creep =
         dy =
             model.hero.y - creep.y
 
-        moveX =
-            (abs dx) > (abs dy)
-
-        desiredX =
-            creep.x + sign dx
-
-        desiredY =
-            creep.y + sign dy
-
-        collideX =
-            Grid.get model desiredX creep.y
-
-        collideY =
-            Grid.get model creep.x desiredY
+        distance =
+            abs dx + abs dy
     in
-        if isKind Hero collideX then
-            { creep | action = KillHero, direction = xyToDirection dx 0 }
-        else if isKind Hero collideY then
-            { creep | action = KillHero, direction = xyToDirection 0 dy }
-        else if canKillHeroWithoutMoving model creep then
+        if distance == 1 then
+            { creep | action = KillHero, direction = xyToDirection dx dy }
+        else if distance == 2 && canKillHeroWithoutMoving model creep then
             { creep | action = NoAction }
-        else if moveX && collideX == Nothing then
-            { creep | action = Move, direction = xyToDirection dx 0 }
-        else if not moveX && collideY == Nothing then
-            { creep | action = Move, direction = xyToDirection 0 dy }
-        else if dx /= 0 && collideX == Nothing then
-            { creep | action = Move, direction = xyToDirection dx 0 }
-        else if dy /= 0 && collideY == Nothing then
-            { creep | action = Move, direction = xyToDirection 0 dy }
-        else if moveX && isKind Block collideX then
-            { creep | action = Attack, direction = xyToDirection dx 0 }
-        else if isKind Block collideY then
-            { creep | action = Attack, direction = xyToDirection 0 dy }
+        else if abs dx == abs dy then
+            doDiagonalMovement model creep
         else
-            { creep | action = NoAction }
+            doNormalMovement model creep
 
 
 canKillHeroWithoutMoving : Model -> Entity -> Bool
@@ -67,18 +66,206 @@ canKillHeroWithoutMoving model creep =
     case model.hero.action of
         Move ->
             let
-                (heroX, heroY) = facing model.hero
+                ( nextHeroX, nextHeroY ) =
+                    facing model.hero
 
-                dx = heroX - creep.x
+                dx =
+                    nextHeroX - creep.x
 
-                dy = heroY - creep.y
+                dy =
+                    nextHeroY - creep.y
+
+                distance =
+                    abs dx + abs dy
             in
-                if (abs dx) + (abs dy) == 1 then
-                      True
+                if distance == 1 then
+                    True
                 else
                     False
+
         _ ->
             False
+
+
+
+-- Try to avoid blocks.
+
+
+doDiagonalMovement : Model -> Entity -> Entity
+doDiagonalMovement model creep =
+    let
+        dx =
+            model.hero.x - creep.x
+
+        dy =
+            model.hero.y - creep.y
+
+        xMove =
+            xMovement model creep dx
+
+        yMove =
+            yMovement model creep dy
+    in
+        doBestMovement yMove xMove creep
+
+
+
+-- Move in primary direction if possible, even if there's a block.
+
+
+doNormalMovement : Model -> Entity -> Entity
+doNormalMovement model creep =
+    let
+        dx =
+            model.hero.x - creep.x
+
+        dy =
+            model.hero.y - creep.y
+
+        primaryMovement =
+            if abs dx > abs dy then
+                xMovement model creep dx
+            else
+                yMovement model creep dy
+    in
+        if isValidMovement creep primaryMovement then
+            doMovement primaryMovement creep
+        else
+            doSecondaryMovement model creep
+
+
+doSecondaryMovement : Model -> Entity -> Entity
+doSecondaryMovement model creep =
+    let
+        dx =
+            model.hero.x - creep.x
+
+        dy =
+            model.hero.y - creep.y
+    in
+        if abs dx > abs dy then
+            if dy == 0 then
+                -- There are two possible secondary y movements.
+                doBestMovement (yMovement model creep 1)
+                    (yMovement model creep -1)
+                    creep
+            else
+                doMovementOrNothing (yMovement model creep dy) creep
+        else if dx == 0 then
+            -- There are two possible secondary x movements.
+            doBestMovement (xMovement model creep 1)
+                (xMovement model creep -1)
+                creep
+        else
+            doMovementOrNothing (xMovement model creep dx) creep
+
+
+xMovement : Model -> Entity -> Int -> Movement
+xMovement model creep dx =
+    if dx > 0 then
+        { x = 1
+        , y = 0
+        , direction = Right
+        , collide = Grid.get model (creep.x + 1) creep.y
+        }
+    else
+        { x = -1
+        , y = 0
+        , direction = Left
+        , collide = Grid.get model (creep.x - 1) creep.y
+        }
+
+
+yMovement : Model -> Entity -> Int -> Movement
+yMovement model creep dy =
+    if dy > 0 then
+        { x = 0
+        , y = 1
+        , direction = Up
+        , collide = Grid.get model creep.x (creep.y + 1)
+        }
+    else
+        { x = 0
+        , y = -1
+        , direction = Down
+        , collide = Grid.get model creep.x (creep.y - 1)
+        }
+
+
+isValidMovement : Entity -> Movement -> Bool
+isValidMovement creep move =
+    if
+        creep.x
+            + move.x
+            == creep.px
+            && creep.y
+            + move.y
+            == creep.py
+    then
+        False
+    else
+        case move.collide of
+            Just entity ->
+                entity.kind /= Creep
+
+            Nothing ->
+                True
+
+
+doBestMovement : Movement -> Movement -> Entity -> Entity
+doBestMovement move1 move2 creep =
+    let
+        move1Valid =
+            isValidMovement creep move1
+
+        move2Valid =
+            isValidMovement creep move2
+    in
+        if not move1Valid && not move2Valid then
+            { creep | action = NoAction }
+        else if not move2Valid then
+            doMovement move1 creep
+        else if not move1Valid then
+            doMovement move2 creep
+        else if move1.collide == Nothing then
+            { creep | action = Move, direction = move1.direction }
+        else if move2.collide == Nothing then
+            { creep | action = Move, direction = move2.direction }
+        else if isKind Block move2.collide then
+            { creep | action = Attack, direction = move1.direction }
+        else
+            { creep | action = Attack, direction = move2.direction }
+
+
+doMovementOrNothing : Movement -> Entity -> Entity
+doMovementOrNothing move creep =
+    if isValidMovement creep move then
+        doMovement move creep
+    else
+        { creep | action = NoAction }
+
+
+doMovement : Movement -> Entity -> Entity
+doMovement move creep =
+    let
+        action =
+            case move.collide of
+                Just entity ->
+                    case entity.kind of
+                        Block ->
+                            Attack
+
+                        Hero ->
+                            KillHero
+
+                        Creep ->
+                            NoAction
+
+                Nothing ->
+                    Move
+    in
+        { creep | action = action, direction = move.direction }
+
 
 isKind : EntityType -> Maybe Entity -> Bool
 isKind kind maybeEntity =

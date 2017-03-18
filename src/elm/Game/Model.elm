@@ -27,7 +27,10 @@ type alias Entity =
     , direction : Direction
     , x : Int
     , y : Int
+    , px : Int
+    , py : Int
     , kind : EntityType
+    , health : Int
     }
 
 

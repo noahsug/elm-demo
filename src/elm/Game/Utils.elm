@@ -40,6 +40,15 @@ facing entity =
         ( entity.x + x, entity.y + y )
 
 
+distance : Entity -> Entity -> Int
+distance e1 e2 =
+    abs (e1.x - e2.x) + abs (e1.y - e2.y)
+
+
+distanceFromCenter : Entity -> Int
+distanceFromCenter entity =
+    (abs entity.x) + (abs entity.y)
+
 position : Entity -> ( Int, Int )
 position entity =
     ( entity.x, entity.y )

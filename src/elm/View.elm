@@ -92,6 +92,7 @@ entityX model entity =
                     toFloat entity.x
     in
         gridToActual model x
+        -- gridToActual model (toFloat entity.x)
 
 
 entityY : Model -> Entity -> Float
@@ -109,6 +110,7 @@ entityY model entity =
                     toFloat entity.y
     in
         gridToActual model y
+        -- gridToActual model (toFloat entity.y)
 
 
 interpolate : Model -> Float -> Float -> Float

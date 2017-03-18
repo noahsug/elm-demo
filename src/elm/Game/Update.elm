@@ -3,14 +3,13 @@ module Game.Update exposing (execute, resolve)
 import Game.Block as Block
 import Game.Model exposing (..)
 import Game.Utils exposing (facing, nextPosition)
-import List.Extra
 
 
 execute : Model -> Model
 execute model =
     let
-        unattackedBlocks =
-            removeBlocks model
+        aliveBlocks =
+            killBlocks model
 
         hero =
             move model.hero
@@ -24,17 +23,25 @@ execute model =
         { model
             | hero = hero
             , creeps = creeps
-            , blocks = unattackedBlocks ++ spawnedBlocks
+            , blocks = aliveBlocks ++ spawnedBlocks
         }
 
 
-removeBlocks : Model -> List Entity
-removeBlocks model =
-    List.Extra.filterNot
-        (\b ->
-            List.any (isAttackingEntity b) model.creeps
-        )
-        model.blocks
+killBlocks : Model -> List Entity
+killBlocks model =
+    model.blocks
+        |> List.map
+            (\b -> { b | health = b.health - (numAttackers model.creeps b) }
+            )
+        |> List.filter
+            (\b -> b.health > 0)
+
+
+numAttackers : List Entity -> Entity -> Int
+numAttackers creeps target =
+    creeps
+        |> List.filter (isAttackingEntity target)
+        |> List.length
 
 
 isAttackingEntity : Entity -> Entity -> Bool
@@ -83,7 +90,7 @@ move entity =
     in
         case entity.action of
             Move ->
-                { entity | x = x, y = y }
+                { entity | x = x, y = y, px = entity.x, py = entity.y }
 
             _ ->
                 entity
