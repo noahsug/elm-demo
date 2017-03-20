@@ -21,7 +21,6 @@ type EntityType
     | Creep
     | Block
 
-
 type alias Entity =
     { action : Action
     , direction : Direction
@@ -39,4 +38,12 @@ type alias Model =
     , creeps : List Entity
     , blocks : List Entity
     , gameOver : Bool
+    }
+
+
+type alias Movement =
+    { x : Int
+    , y : Int
+    , direction : Direction
+    , collide : Maybe Entity
     }

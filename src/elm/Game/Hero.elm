@@ -1,11 +1,13 @@
 module Game.Hero exposing (create, makeChoice)
 
+import Game.Ai.Model exposing (..)
+import Game.Ai.BuildPlan as BuildPlan
 import Game.Creep as Creep
 import Game.Grid as Grid
 import Game.Model exposing (..)
+import Game.Movement as Movement
 import Game.Update as Update
-import Game.Utils exposing (directionToXY, distanceFromCenter)
-import List.Extra
+import Game.Utils exposing (directionToXY, xyToDirection, distanceFromCenter)
 
 
 create : Entity
@@ -21,6 +23,181 @@ create =
     }
 
 
+type alias Choice =
+    { action : Action
+    , direction : Direction
+    }
+
+
+type alias EvaluatedChoice =
+    { choice : Choice
+    , eval : Float
+    }
+
+
+doNothingChoice : Choice
+doNothingChoice =
+    Choice NoAction Down
+
+
+gameOverEval : Float
+gameOverEval =
+    -1000
+
+
+makeChoice : Model -> Entity
+makeChoice model =
+    let
+        -- TODO: If we continue to not change build plan eval, just return first
+        -- plan that works, since they're sorted by best plan.
+        bestBuildPlanChoice =
+            List.foldl (maxBuildPlanEval model)
+                (EvaluatedChoice doNothingChoice gameOverEval)
+                (BuildPlan.buildPlans model)
+    in
+        if bestBuildPlanChoice.eval <= gameOverEval then
+            doSurvivalActions model
+        else
+            doChoice model bestBuildPlanChoice.choice
+
+
+maxBuildPlanEval : Model -> BuildPlan -> EvaluatedChoice -> EvaluatedChoice
+maxBuildPlanEval model plan best =
+    if best.eval >= plan.eval then
+        best
+    else
+        let
+            candidate =
+                evalBuildPlan plan model
+        in
+            if candidate.eval > best.eval then
+                candidate
+            else
+                best
+
+
+evalBuildPlan : BuildPlan -> Model -> EvaluatedChoice
+evalBuildPlan plan model =
+    -- TODO: Use AStar instead. Problem with this is it doesn't handle when the
+    -- hero is directly on the desired square, and it only looks at one possible
+    -- path.
+    let
+        dx =
+            plan.x - model.hero.x
+
+        dy =
+            plan.y - model.hero.y
+
+        distance =
+            abs dx + abs dy
+    in
+        if model.gameOver then
+            EvaluatedChoice doNothingChoice gameOverEval
+        else if distance == 1 then
+            let
+                direction =
+                    xyToDirection dx dy
+
+                choice =
+                    Choice Build direction
+            in
+                if choiceIsSafe choice model then
+                    EvaluatedChoice choice plan.eval
+                else
+                    EvaluatedChoice doNothingChoice gameOverEval
+        else
+            evalBuildPlanMovement plan model
+
+
+evalBuildPlanMovement : BuildPlan -> Model -> EvaluatedChoice
+evalBuildPlanMovement plan model =
+    let
+        dx =
+            plan.x - model.hero.x
+
+        dy =
+            plan.y - model.hero.y
+
+        xMove =
+            Movement.xMovement model model.hero dx
+
+        yMove =
+            Movement.yMovement model model.hero dy
+
+        maybeMove =
+            if dy /= 0 && yMove.collide == Nothing then
+                Just yMove
+            else if dx /= 0 && xMove.collide == Nothing then
+                Just xMove
+            else
+                Nothing
+    in
+        case maybeMove of
+            Just move ->
+                let
+                    choice =
+                        Choice Move move.direction
+
+                    next =
+                        model
+                            |> nextState choice
+                            |> evalBuildPlan plan
+                in
+                    if next.eval <= gameOverEval then
+                        EvaluatedChoice doNothingChoice gameOverEval
+                    else
+                        EvaluatedChoice choice plan.eval
+
+            Nothing ->
+                EvaluatedChoice doNothingChoice gameOverEval
+
+
+choiceIsSafe : Choice -> Model -> Bool
+choiceIsSafe choice model =
+    let
+        x =
+            model
+                |> nextState choice
+                |> nextState doNothingChoice
+    in
+        -- Do nothing after doing the choice, if hero survives, choice is safe.
+        model
+            |> nextState choice
+            |> nextState doNothingChoice
+            |> not
+            << .gameOver
+
+
+doChoice : Model -> Choice -> Entity
+doChoice model choice =
+    let
+        hero =
+            model.hero
+    in
+        { hero | action = choice.action, direction = choice.direction }
+
+
+doNothing : Model -> Entity
+doNothing model =
+    let
+        hero =
+            model.hero
+    in
+        { hero | action = NoAction }
+
+
+nextState : Choice -> Model -> Model
+nextState choice model =
+    { model | hero = doChoice model choice }
+        |> makeCreepChoices
+        |> Update.resolve
+        |> Update.execute
+
+
+
+-- Survival Actions
+
+
 maxDepth : Int
 maxDepth =
     4
@@ -28,11 +205,11 @@ maxDepth =
 
 maxEvalValue : Float
 maxEvalValue =
-    100
+    0
 
 
-makeChoice : Model -> Entity
-makeChoice model =
+doSurvivalActions : Model -> Entity
+doSurvivalActions model =
     let
         hero =
             model.hero
@@ -41,17 +218,6 @@ makeChoice model =
             Tuple.first (bestChoice 0 model)
     in
         { hero | action = action, direction = direction }
-
-
-type alias Choice =
-    { action : Action
-    , direction : Direction
-    }
-
-
-noChoice : Choice
-noChoice =
-    Choice NoAction Down
 
 
 choices : List Choice
@@ -70,10 +236,10 @@ choices =
 bestChoice : Int -> Model -> ( Choice, Float )
 bestChoice depth model =
     if depth > maxDepth || model.gameOver then
-        ( noChoice, staticEval model depth )
+        ( doNothingChoice, staticEval model depth )
     else
         (List.foldl (maxEval depth model)
-            ( noChoice, gameOverValue )
+            ( doNothingChoice, gameOverValue depth )
             (List.filter (isValidChoice model) choices)
         )
 
@@ -102,99 +268,17 @@ staticEval model depth =
     if model.gameOver then
         gameOverValue depth
     else
-        0.5 * stayCentralHeuristic model + buildBlocksHeuristic model
+        stayCentralHeuristic model
 
-gameOverValue : Int -> Float
-gameOverValue depth =
-    toFloat (depth - 1000)
 
 stayCentralHeuristic : Model -> Float
 stayCentralHeuristic model =
     toFloat -(distanceFromCenter model.hero)
 
 
-buildBlocksHeuristic : Model -> Float
-buildBlocksHeuristic model =
-    List.foldl
-        (\block result ->
-            let
-                distance =
-                    abs (4 - distanceFromCenter block)
-            in
-                result
-                    + if distance == 0 then
-                        5
-                      else if distance < 1 then
-                        3
-                      else
-                        1
-        )
-        0
-        model.blocks
-
-
-
---closestEntityStaticEval : Model -> Float
---closestEntityStaticEval model =
---    let
---        ( closest, distance ) =
---            closestEntity model
---    in
---        case closest.kind of
---            Creep ->
---                if distance <= 2 then
---                    -100
---                else if distance <= 4 then
---                    -10
---                else
---                    -1
---
---            Block ->
---                if distance <= 4 then
---                    1
---                else
---                    0
---
---            _ ->
---                0
---
---
---closestEntity : Model -> ( Entity, Int )
---closestEntity model =
---    List.foldl
---        (\entity closest ->
---            let
---                distance =
---                    Game.Utils.distance model.hero entity
---            in
---                if distance < Tuple.second closest then
---                    ( entity, distance )
---                else
---                    closest
---        )
---        ( model.hero, -1000000 )
---        -- We check creeps first because we want them to break ties.
---        (model.creeps ++ model.blocks)
-
-
-nextState : Choice -> Model -> Model
-nextState choice model =
-    model
-        |> setHeroChoice choice
-        |> makeCreepChoices
-        |> Update.resolve
-        |> Update.execute
-
-
-setHeroChoice : Choice -> Model -> Model
-setHeroChoice { action, direction } model =
-    let
-        modelHero =
-            model.hero
-    in
-        { model
-            | hero = { modelHero | action = action, direction = direction }
-        }
+gameOverValue : Int -> Float
+gameOverValue depth =
+    toFloat (depth - 1000)
 
 
 makeCreepChoices : Model -> Model
@@ -215,9 +299,7 @@ isValidChoice model { action, direction } =
             y =
                 model.hero.y + dy
         in
-            Grid.get model x y
-                == Nothing
-                && (distanceFromCenter model.hero)
-                <= 7
+            (Grid.get model x y == Nothing)
+                && Grid.inBounds model.hero.x model.hero.y
     else
         True

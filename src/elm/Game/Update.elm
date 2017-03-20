@@ -2,7 +2,7 @@ module Game.Update exposing (execute, resolve)
 
 import Game.Block as Block
 import Game.Model exposing (..)
-import Game.Utils exposing (facing, nextPosition)
+import Game.Utils exposing (facing, nextPosition, distanceFromEntity)
 
 
 execute : Model -> Model
@@ -19,11 +19,15 @@ execute model =
 
         spawnedBlocks =
             spawnBlocks creeps model.hero
+
+        gameOver =
+            model.gameOver || isGameOver creeps hero
     in
         { model
             | hero = hero
             , creeps = creeps
             , blocks = aliveBlocks ++ spawnedBlocks
+            , gameOver = gameOver
         }
 
 
@@ -31,8 +35,7 @@ killBlocks : Model -> List Entity
 killBlocks model =
     model.blocks
         |> List.map
-            (\b -> { b | health = b.health - (numAttackers model.creeps b) }
-            )
+            (\b -> { b | health = b.health - (numAttackers model.creeps b) })
         |> List.filter
             (\b -> b.health > 0)
 
@@ -96,10 +99,18 @@ move entity =
                 entity
 
 
+isGameOver : List Entity -> Entity -> Bool
+isGameOver creeps hero =
+    List.any
+        (\creep ->
+            distanceFromEntity creep hero == 1
+        )
+        creeps
+
+
 resolve : Model -> Model
 resolve model =
     model
-        |> maybeEndGame
         |> stopSameSquareMovement
 
 
@@ -145,27 +156,3 @@ willCollide entityList entity =
     List.any
         (\listEntity -> nextPosition entity == nextPosition listEntity)
         entityList
-
-
-maybeEndGame : Model -> Model
-maybeEndGame model =
-    let
-        gameOver =
-            model.gameOver
-                || isGameOver model.creeps model.hero
-
-        modelHero =
-            model.hero
-
-        hero =
-            if gameOver then
-                { modelHero | action = NoAction }
-            else
-                modelHero
-    in
-        { model | hero = hero, gameOver = gameOver }
-
-
-isGameOver : List Entity -> Entity -> Bool
-isGameOver creeps hero =
-    List.any (\c -> c.action == KillHero) creeps

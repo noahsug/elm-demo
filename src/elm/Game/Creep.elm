@@ -3,6 +3,7 @@ module Game.Creep exposing (create, create2, makeChoice)
 import Game.Model exposing (..)
 import Game.Grid as Grid
 import Game.Utils exposing (xyToDirection, facing, position)
+import Game.Movement exposing (..)
 
 
 create : Entity
@@ -28,14 +29,6 @@ create2 =
     , py = 6
     , kind = Creep
     , health = 1
-    }
-
-
-type alias Movement =
-    { x : Int
-    , y : Int
-    , direction : Direction
-    , collide : Maybe Entity
     }
 
 
@@ -160,47 +153,10 @@ doSecondaryMovement model creep =
             doMovementOrNothing (xMovement model creep dx) creep
 
 
-xMovement : Model -> Entity -> Int -> Movement
-xMovement model creep dx =
-    if dx > 0 then
-        { x = 1
-        , y = 0
-        , direction = Right
-        , collide = Grid.get model (creep.x + 1) creep.y
-        }
-    else
-        { x = -1
-        , y = 0
-        , direction = Left
-        , collide = Grid.get model (creep.x - 1) creep.y
-        }
-
-
-yMovement : Model -> Entity -> Int -> Movement
-yMovement model creep dy =
-    if dy > 0 then
-        { x = 0
-        , y = 1
-        , direction = Up
-        , collide = Grid.get model creep.x (creep.y + 1)
-        }
-    else
-        { x = 0
-        , y = -1
-        , direction = Down
-        , collide = Grid.get model creep.x (creep.y - 1)
-        }
-
-
 isValidMovement : Entity -> Movement -> Bool
 isValidMovement creep move =
-    if
-        creep.x
-            + move.x
-            == creep.px
-            && creep.y
-            + move.y
-            == creep.py
+    if creep.x + move.x == creep.px
+            && creep.y + move.y == creep.py
     then
         False
     else

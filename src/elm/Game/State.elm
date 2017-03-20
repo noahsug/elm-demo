@@ -26,7 +26,17 @@ update model =
 
 makeHeroChoice : Model -> Model
 makeHeroChoice model =
-    { model | hero = Hero.makeChoice model }
+    let
+        modelHero =
+            model.hero
+
+        hero =
+            if model.gameOver then
+                { modelHero | action = NoAction }
+            else
+                Hero.makeChoice model
+    in
+        { model | hero = hero }
 
 
 makeCreepChoices : Model -> Model

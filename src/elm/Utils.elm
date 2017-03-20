@@ -46,6 +46,14 @@ sign value =
         1
 
 
+normalize : Int -> Int
+normalize value =
+    if value == 0 then
+        0
+    else
+        sign value
+
+
 isNothing : Maybe a -> Bool
 isNothing maybe =
     case maybe of
@@ -54,6 +62,7 @@ isNothing maybe =
 
         Nothing ->
             True
+
 
 (?) : Maybe a -> a -> a
 (?) maybe default =

@@ -9,7 +9,7 @@ import Helpers exposing (..)
 gameUtilsTests : Test
 gameUtilsTests =
     describe "Game utils"
-        [ describe "distance"
+        [ describe "distanceFromEntity"
             [ test "gets the distance between two entities" <|
                 \() ->
                     let
@@ -19,7 +19,7 @@ gameUtilsTests =
                         e2 =
                             createBlock 2 5
                     in
-                        Game.Utils.distance e1 e2
+                        Game.Utils.distanceFromEntity e1 e2
                             |> Expect.equal 7
             ]
         , describe "distanceFromCenter"

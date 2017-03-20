@@ -41,7 +41,7 @@ init =
     ( { timeUntilGameUpdate = 0
       , game = Game.State.init
       , screen = Screen.init
-      , runUntil = Config.gameUpdateTime * 40
+      , runUntil = Config.gameUpdateTime * 9
       }
     , Task.perform Resize Window.size
     )
