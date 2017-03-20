@@ -2,7 +2,7 @@ module Helpers exposing (..)
 
 import Game.Model exposing (..)
 import Game.State
-import Game.Block as Block
+import Game.Structure as Structure
 import Game.Creep as Creep
 import Game.Hero as Hero
 
@@ -30,6 +30,6 @@ createBlock : Int -> Int -> Entity
 createBlock x y =
     let
         block =
-            Block.create
+            Structure.createBlock
     in
         { block | x = x, y = y }

@@ -52,18 +52,3 @@ normalize value =
         0
     else
         sign value
-
-
-isNothing : Maybe a -> Bool
-isNothing maybe =
-    case maybe of
-        Just _ ->
-            False
-
-        Nothing ->
-            True
-
-
-(?) : Maybe a -> a -> a
-(?) maybe default =
-    Maybe.withDefault default maybe

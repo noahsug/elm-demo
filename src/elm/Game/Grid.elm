@@ -31,7 +31,7 @@ positions =
 get : Model -> Int -> Int -> Maybe Entity
 get model x y =
     List.Extra.find (\e -> e.x == x && e.y == y)
-        (model.hero :: (model.creeps ++ model.blocks))
+        (model.hero :: (model.creeps ++ model.structures))
 
 
 inBounds : Int -> Int -> Bool

@@ -4,7 +4,7 @@ import Collage
 import Color
 import Config exposing (gridSize, heroRadius)
 import Element
-import Game.Model exposing (Entity, Action(..))
+import Game.Model exposing (Entity, EntityType(..), StructureType(..), Action(..))
 import Game.Utils exposing (directionToXY)
 import Html
 import Model exposing (Model)
@@ -21,7 +21,7 @@ view model =
             (drawBackground model
                 ++ drawHero model
                 ++ List.map (drawCreep model) model.game.creeps
-                ++ List.map (drawBlock model) model.game.blocks
+                ++ List.map (drawStructure model) model.game.structures
             )
         )
 
@@ -65,8 +65,8 @@ drawCreep model creep =
             ( entityX model creep, entityY model creep )
 
 
-drawBlock : Model -> Entity -> Collage.Form
-drawBlock model block =
+drawStructure : Model -> Entity -> Collage.Form
+drawStructure model structure =
     Collage.ngon 4
         (Screen.toActual model.screen
             (1.4 * gridSize / 2)
@@ -74,7 +74,27 @@ drawBlock model block =
         |> Collage.filled (Color.rgb 141 110 99)
         |> Collage.rotate (degrees 45)
         |> Collage.move
-            ( entityX model block, entityY model block )
+            ( entityX model structure, entityY model structure )
+
+
+--structureColor : StructureType -> Color
+--structureColor structureType =
+--    case structureType of
+--        Block ->
+--            Color.rgb 141 110 99
+--
+--        Turret ->
+--            Color.rgb 141 110 99
+--
+--
+--structureSides : StructureType -> Int
+--structureSides structureType =
+--    case structureType of
+--        Block ->
+--            4
+--
+--        Turret ->
+--            3
 
 
 entityX : Model -> Entity -> Float

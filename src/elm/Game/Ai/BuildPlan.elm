@@ -26,22 +26,36 @@ initEval =
         (\( x, y ) ->
             let
                 idealBlockDistance =
-                    Config.heroRadius // 2 - 1
+                    Config.heroRadius // 3
 
-                distanceSquared =
+                idealTurretDistance = idealBlockDistance - 1
+
+                blockDistanceSquared =
                     abs
                         (idealBlockDistance
                             * idealBlockDistance
                             - (x * x + y * y)
                         )
 
-                eval =
-                    toFloat (6 - distanceSquared)
+                turretDistanceSquared =
+                    abs
+                        (idealTurretDistance
+                            * idealTurretDistance
+                            - (x * x + y * y)
+                        )
+
+                blockEval =
+                    toFloat (6 - blockDistanceSquared)
+
+                turretEval =
+                    toFloat (6 - turretDistanceSquared)
+
+                structureType = if turretEval >= blockEval then Turret else Block
             in
                 { x = x
                 , y = y
-                , build = Block
-                , eval = eval
+                , build = Structure structureType
+                , eval = max turretEval blockEval
                 }
         )
         Grid.positions

@@ -1,7 +1,7 @@
 module GameTests exposing (gameTests)
 
 import Expect
-import Game.Block as Block
+import Game.Structure as Structure
 import Game.Creep as Creep
 import Game.Hero as Hero
 import Game.Model exposing (..)
@@ -45,7 +45,7 @@ gameTests =
                             | hero = createHero 0 0 NoAction Down
                             , creeps =
                                 [ createCreep -1 -1 NoAction Down ]
-                            , blocks =
+                            , structures =
                                 [ createBlock 0 1
                                 , createBlock 1 0
                                 ]
@@ -56,7 +56,7 @@ gameTests =
                             [ .gameOver >> Expect.equal False
                             , Game.State.update >> .gameOver >> Expect.equal True
                             ]
-        , test "kills trapped hero by killing blocks" <|
+        , test "kills trapped hero by killing structures" <|
             \() ->
                 let
                     {-
@@ -69,7 +69,7 @@ gameTests =
                             | hero = createHero 0 0 NoAction Down
                             , creeps =
                                 [ createCreep -1 -1 NoAction Down ]
-                            , blocks =
+                            , structures =
                                 [ createBlock 0 1
                                 , createBlock 1 0
                                 , createBlock -1 0

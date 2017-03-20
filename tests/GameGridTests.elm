@@ -11,7 +11,7 @@ gameGridTests =
         [ describe "positions"
             [ test "gets all legal hero positions" <|
                 \() ->
-                    List.length (Debug.log "positions" (Grid.positions))
+                    List.length Grid.positions
                         |> Expect.equal 148
             ]
         ]

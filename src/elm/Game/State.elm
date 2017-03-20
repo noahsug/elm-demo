@@ -10,7 +10,7 @@ init : Model
 init =
     { hero = Hero.create
     , creeps = [ Creep.create, Creep.create2 ]
-    , blocks = []
+    , structures = []
     , gameOver = False
     }
 

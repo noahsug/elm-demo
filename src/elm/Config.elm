@@ -7,7 +7,7 @@ screenSurfaceArea =
 
 
 
--- Size of single block in the game grid.
+-- Size of single tile in the game grid.
 gridSize : Float
 gridSize =
     15

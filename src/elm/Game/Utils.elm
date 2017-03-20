@@ -49,6 +49,7 @@ distanceFromCenter : Entity -> Int
 distanceFromCenter entity =
     (abs entity.x) + (abs entity.y)
 
+
 position : Entity -> ( Int, Int )
 position entity =
     ( entity.x, entity.y )
@@ -62,3 +63,13 @@ nextPosition entity =
 
         _ ->
             position entity
+
+
+isStructure : Entity -> Bool
+isStructure entity =
+    case entity.kind of
+        Structure _ ->
+            True
+
+        _ ->
+            False

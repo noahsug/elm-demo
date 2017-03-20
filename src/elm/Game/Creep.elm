@@ -2,8 +2,9 @@ module Game.Creep exposing (create, create2, makeChoice)
 
 import Game.Model exposing (..)
 import Game.Grid as Grid
-import Game.Utils exposing (xyToDirection, facing, position)
+import Game.Utils exposing (xyToDirection, facing, position, isStructure)
 import Game.Movement exposing (..)
+import Maybe.Extra
 
 
 create : Entity
@@ -81,7 +82,7 @@ canKillHeroWithoutMoving model creep =
 
 
 
--- Try to avoid blocks.
+-- Try to avoid structures.
 
 
 doDiagonalMovement : Model -> Entity -> Entity
@@ -103,7 +104,7 @@ doDiagonalMovement model creep =
 
 
 
--- Move in primary direction if possible, even if there's a block.
+-- Move in primary direction if possible, even if there's a structure.
 
 
 doNormalMovement : Model -> Entity -> Entity
@@ -187,7 +188,7 @@ doBestMovement move1 move2 creep =
             { creep | action = Move, direction = move1.direction }
         else if move2.collide == Nothing then
             { creep | action = Move, direction = move2.direction }
-        else if isKind Block move2.collide then
+        else if Maybe.Extra.unwrap False isStructure move2.collide then
             { creep | action = Attack, direction = move1.direction }
         else
             { creep | action = Attack, direction = move2.direction }
@@ -208,7 +209,7 @@ doMovement move creep =
             case move.collide of
                 Just entity ->
                     case entity.kind of
-                        Block ->
+                        Structure _ ->
                             Attack
 
                         Hero ->
@@ -221,13 +222,3 @@ doMovement move creep =
                     Move
     in
         { creep | action = action, direction = move.direction }
-
-
-isKind : EntityType -> Maybe Entity -> Bool
-isKind kind maybeEntity =
-    case maybeEntity of
-        Just entity ->
-            entity.kind == kind
-
-        Nothing ->
-            False

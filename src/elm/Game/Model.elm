@@ -19,7 +19,13 @@ type Action
 type EntityType
     = Hero
     | Creep
-    | Block
+    | Structure StructureType
+
+
+type StructureType
+    = Block
+    | Turret
+
 
 type alias Entity =
     { action : Action
@@ -36,7 +42,7 @@ type alias Entity =
 type alias Model =
     { hero : Entity
     , creeps : List Entity
-    , blocks : List Entity
+    , structures : List Entity
     , gameOver : Bool
     }
 

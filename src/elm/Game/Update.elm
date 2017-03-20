@@ -1,6 +1,6 @@
 module Game.Update exposing (execute, resolve)
 
-import Game.Block as Block
+import Game.Structure as Structure
 import Game.Model exposing (..)
 import Game.Utils exposing (facing, nextPosition, distanceFromEntity)
 
@@ -8,8 +8,8 @@ import Game.Utils exposing (facing, nextPosition, distanceFromEntity)
 execute : Model -> Model
 execute model =
     let
-        aliveBlocks =
-            killBlocks model
+        aliveStructures =
+            killStructures model
 
         hero =
             move model.hero
@@ -17,8 +17,8 @@ execute model =
         creeps =
             List.map move model.creeps
 
-        spawnedBlocks =
-            spawnBlocks creeps model.hero
+        spawnedStructures =
+            spawnStructures creeps model.hero
 
         gameOver =
             model.gameOver || isGameOver creeps hero
@@ -26,14 +26,14 @@ execute model =
         { model
             | hero = hero
             , creeps = creeps
-            , blocks = aliveBlocks ++ spawnedBlocks
+            , structures = aliveStructures ++ spawnedStructures
             , gameOver = gameOver
         }
 
 
-killBlocks : Model -> List Entity
-killBlocks model =
-    model.blocks
+killStructures : Model -> List Entity
+killStructures model =
+    model.structures
         |> List.map
             (\b -> { b | health = b.health - (numAttackers model.creeps b) })
         |> List.filter
@@ -57,8 +57,8 @@ isAttackingEntity target creep =
             False
 
 
-spawnBlocks : List Entity -> Entity -> List Entity
-spawnBlocks creeps hero =
+spawnStructures : List Entity -> Entity -> List Entity
+spawnStructures creeps hero =
     let
         ( x, y ) =
             facing hero
@@ -80,7 +80,7 @@ createBlock : Int -> Int -> Entity
 createBlock x y =
     let
         block =
-            Block.create
+            Structure.createBlock
     in
         { block | x = x, y = y }
 
