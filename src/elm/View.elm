@@ -19,9 +19,9 @@ view model =
             (Screen.actualWidth model.screen)
             (Screen.actualHeight model.screen)
             (drawBackground model
-                ++ drawHero model
-                ++ List.map (drawCreep model) model.game.creeps
-                ++ List.map (drawStructure model) model.game.structures
+                ++ [ drawEntity model model.game.hero ]
+                ++ List.map (drawEntity model) model.game.creeps
+                ++ List.map (drawEntity model) model.game.structures
             )
         )
 
@@ -42,31 +42,46 @@ drawBackground model =
     ]
 
 
-drawHero : Model -> List Collage.Form
+drawEntity : Model -> Entity -> Collage.Form
+drawEntity model entity =
+    case entity.kind of
+        Hero ->
+            drawHero model
+
+        Creep ->
+            drawCreep model entity
+
+        Structure Block ->
+            drawBlock model entity
+
+        Structure Turret ->
+            drawTurret model entity
+
+
+drawHero : Model -> Collage.Form
 drawHero model =
-    [ Collage.circle
+    Collage.circle
         (Screen.toActual model.screen
-            (gridSize / 2)
+            (gridSize / 3)
         )
         |> Collage.filled Color.gray
         |> Collage.move
             ( entityX model model.game.hero, entityY model model.game.hero )
-    ]
 
 
 drawCreep : Model -> Entity -> Collage.Form
 drawCreep model creep =
     Collage.circle
         (Screen.toActual model.screen
-            (gridSize / 2)
+            (gridSize / 3)
         )
         |> Collage.filled (Color.rgb 255 112 67)
         |> Collage.move
             ( entityX model creep, entityY model creep )
 
 
-drawStructure : Model -> Entity -> Collage.Form
-drawStructure model structure =
+drawBlock : Model -> Entity -> Collage.Form
+drawBlock model structure =
     Collage.ngon 4
         (Screen.toActual model.screen
             (1.4 * gridSize / 2)
@@ -77,24 +92,28 @@ drawStructure model structure =
             ( entityX model structure, entityY model structure )
 
 
---structureColor : StructureType -> Color
---structureColor structureType =
---    case structureType of
---        Block ->
---            Color.rgb 141 110 99
---
---        Turret ->
---            Color.rgb 141 110 99
---
---
---structureSides : StructureType -> Int
---structureSides structureType =
---    case structureType of
---        Block ->
---            4
---
---        Turret ->
---            3
+drawTurret : Model -> Entity -> Collage.Form
+drawTurret model structure =
+    let
+        baseGreen =
+            144
+
+        green =
+            case structure.action of
+                Attack _ ->
+                    baseGreen
+                        |> stepInterpolation model 100 0.8 1
+                        |> round
+
+                _ ->
+                    baseGreen
+    in
+        Collage.ngon 3
+            (Screen.toActual model.screen gridSize / 2)
+            |> Collage.filled (Color.rgb 110 green 99)
+            |> Collage.rotate (degrees 90)
+            |> Collage.move
+                ( entityX model structure, entityY model structure )
 
 
 entityX : Model -> Entity -> Float
@@ -106,13 +125,12 @@ entityX model entity =
         x =
             case entity.action of
                 Move ->
-                    interpolate model (toFloat dx) (toFloat entity.x)
+                    linearInterpolation model (toFloat dx) (toFloat entity.x)
 
                 _ ->
                     toFloat entity.x
     in
         gridToActual model x
-        -- gridToActual model (toFloat entity.x)
 
 
 entityY : Model -> Entity -> Float
@@ -124,18 +142,51 @@ entityY model entity =
         y =
             case entity.action of
                 Move ->
-                    interpolate model (toFloat dy) (toFloat entity.y)
+                    linearInterpolation model (toFloat dy) (toFloat entity.y)
 
                 _ ->
                     toFloat entity.y
     in
         gridToActual model y
-        -- gridToActual model (toFloat entity.y)
 
 
-interpolate : Model -> Float -> Float -> Float
-interpolate model amount value =
+linearInterpolation : Model -> Float -> Float -> Float
+linearInterpolation model amount value =
     value + amount * (1 - model.timeUntilGameUpdate / Config.gameUpdateTime)
+
+
+
+-- curvedInterpolation : Model -> Float -> Float -> Float
+-- curvedInterpolation model amount value =
+--     let
+--         ratio =
+--             1 - model.timeUntilGameUpdate / Config.gameUpdateTime
+--
+--         a =
+--             0
+--
+--         b =
+--             0.2
+--     in
+--         value
+--             + amount
+--             * if ratio > a && ratio < b then
+--                 sin ((ratio - a) * (1 / b))
+--               else
+--                 0
+--
+
+
+stepInterpolation : Model -> Float -> Float -> Float -> Float -> Float
+stepInterpolation model amount start end value =
+    let
+        ratio =
+            1 - model.timeUntilGameUpdate / Config.gameUpdateTime
+    in
+        if ratio > start && ratio < end then
+            value + amount
+        else
+            value
 
 
 gridToActual : Model -> Float -> Float

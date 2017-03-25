@@ -11,8 +11,8 @@ type Direction
 type Action
     = NoAction
     | Move
-    | Build
-    | Attack
+    | Build StructureType
+    | Attack Entity
     | KillHero
 
 

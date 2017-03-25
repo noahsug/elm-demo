@@ -1,8 +1,7 @@
 module Game.Creep exposing (create, create2, makeChoice)
 
 import Game.Model exposing (..)
-import Game.Grid as Grid
-import Game.Utils exposing (xyToDirection, facing, position, isStructure)
+import Game.Utils exposing (xyToDirection, facing, position, isStructure, isTurret)
 import Game.Movement exposing (..)
 import Maybe.Extra
 
@@ -16,7 +15,7 @@ create =
     , px = -6
     , py = 0
     , kind = Creep
-    , health = 1
+    , health = 4
     }
 
 
@@ -156,8 +155,13 @@ doSecondaryMovement model creep =
 
 isValidMovement : Entity -> Movement -> Bool
 isValidMovement creep move =
-    if creep.x + move.x == creep.px
-            && creep.y + move.y == creep.py
+    if
+        creep.x
+            + move.x
+            == creep.px
+            && creep.y
+            + move.y
+            == creep.py
     then
         False
     else
@@ -172,26 +176,31 @@ isValidMovement creep move =
 doBestMovement : Movement -> Movement -> Entity -> Entity
 doBestMovement move1 move2 creep =
     let
-        move1Valid =
-            isValidMovement creep move1
+        move1Invalid =
+            not (isValidMovement creep move1)
 
-        move2Valid =
-            isValidMovement creep move2
+        move2Invalid =
+            not (isValidMovement creep move2)
     in
-        if not move1Valid && not move2Valid then
+        if move2Invalid && move2Invalid then
             { creep | action = NoAction }
-        else if not move2Valid then
+        else if move2Invalid then
             doMovement move1 creep
-        else if not move1Valid then
+        else if move1Invalid then
+            doMovement move2 creep
+        else if collidesWith isTurret move1 then
+            doMovement move1 creep
+        else if collidesWith isTurret move2 then
             doMovement move2 creep
         else if move1.collide == Nothing then
-            { creep | action = Move, direction = move1.direction }
-        else if move2.collide == Nothing then
-            { creep | action = Move, direction = move2.direction }
-        else if Maybe.Extra.unwrap False isStructure move2.collide then
-            { creep | action = Attack, direction = move1.direction }
+            doMovement move1 creep
         else
-            { creep | action = Attack, direction = move2.direction }
+            doMovement move2 creep
+
+
+collidesWith : (Entity -> Bool) -> Movement -> Bool
+collidesWith isEntityFn move =
+    Maybe.Extra.unwrap False isEntityFn move.collide
 
 
 doMovementOrNothing : Movement -> Entity -> Entity
@@ -210,7 +219,7 @@ doMovement move creep =
                 Just entity ->
                     case entity.kind of
                         Structure _ ->
-                            Attack
+                            Attack entity
 
                         Hero ->
                             KillHero

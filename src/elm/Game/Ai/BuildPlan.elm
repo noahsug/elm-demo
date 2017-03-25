@@ -54,7 +54,7 @@ initEval =
             in
                 { x = x
                 , y = y
-                , build = Structure structureType
+                , build = structureType
                 , eval = max turretEval blockEval
                 }
         )
@@ -77,7 +77,7 @@ removeNonemptyTiles model buildPlans =
 
 evalHeroPosition : Model -> List BuildPlan -> List BuildPlan
 evalHeroPosition model buildPlans =
-    -- 1 for each square hero has to move to build the building.
+    -- 0.5 for each square hero has to move to build the building.
     List.map
         (\buildPlan ->
             let
@@ -92,6 +92,6 @@ evalHeroPosition model buildPlans =
                 heroEval =
                     toFloat -heroDistance
             in
-                { buildPlan | eval = buildPlan.eval + heroEval }
+                { buildPlan | eval = buildPlan.eval + heroEval * 0.5 }
         )
         buildPlans

@@ -3,6 +3,7 @@ module Game.State exposing (init, update)
 import Game.Creep as Creep
 import Game.Hero as Hero
 import Game.Model exposing (..)
+import Game.Structure as Structure
 import Game.Update as Update
 
 
@@ -21,6 +22,7 @@ update model =
         |> Update.execute
         |> makeHeroChoice
         |> makeCreepChoices
+        |> makeStructureChoices
         |> Update.resolve
 
 
@@ -42,3 +44,8 @@ makeHeroChoice model =
 makeCreepChoices : Model -> Model
 makeCreepChoices model =
     { model | creeps = List.map (Creep.makeChoice model) model.creeps }
+
+
+makeStructureChoices : Model -> Model
+makeStructureChoices model =
+    { model | structures = List.map (Structure.makeChoice model) model.structures }

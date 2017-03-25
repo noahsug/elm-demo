@@ -31,6 +31,18 @@ directionToXY dir =
             ( 1, 0 )
 
 
+directionToEntity : Entity -> Entity -> Direction
+directionToEntity target source =
+    let
+        dx = target.x - source.x
+        dy = target.y - source.y
+    in
+        if abs dx > abs dy then
+            xyToDirection dx 0
+        else
+            xyToDirection 0 dy
+
+
 facing : Entity -> ( Int, Int )
 facing entity =
     let
@@ -69,6 +81,16 @@ isStructure : Entity -> Bool
 isStructure entity =
     case entity.kind of
         Structure _ ->
+            True
+
+        _ ->
+            False
+
+
+isTurret : Entity -> Bool
+isTurret entity =
+    case entity.kind of
+        Structure Turret ->
             True
 
         _ ->

@@ -6,6 +6,6 @@ import Game.Model exposing (..)
 type alias BuildPlan =
     { x : Int
     , y : Int
-    , build : EntityType
+    , build : StructureType
     , eval : Float
     }

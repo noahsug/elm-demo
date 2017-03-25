@@ -9,13 +9,16 @@ execute : Model -> Model
 execute model =
     let
         aliveStructures =
-            killStructures model
+            killEntities model.creeps model.structures
+
+        aliveCreeps =
+            killEntities model.structures model.creeps
 
         hero =
             move model.hero
 
         creeps =
-            List.map move model.creeps
+            List.map move aliveCreeps
 
         spawnedStructures =
             spawnStructures creeps model.hero
@@ -31,30 +34,40 @@ execute model =
         }
 
 
-killStructures : Model -> List Entity
-killStructures model =
-    model.structures
+killEntities : List Entity -> List Entity -> List Entity
+killEntities attackers entities =
+    entities
         |> List.map
-            (\b -> { b | health = b.health - (numAttackers model.creeps b) })
+            (\e -> { e | health = e.health - (numAttackers attackers e) })
         |> List.filter
-            (\b -> b.health > 0)
+            (\e -> e.health > 0)
 
 
 numAttackers : List Entity -> Entity -> Int
-numAttackers creeps target =
-    creeps
+numAttackers attackers target =
+    attackers
         |> List.filter (isAttackingEntity target)
         |> List.length
 
 
 isAttackingEntity : Entity -> Entity -> Bool
-isAttackingEntity target creep =
-    case creep.action of
-        Attack ->
-            facing creep == ( target.x, target.y )
+isAttackingEntity target entity =
+    case entity.action of
+        Attack attackTarget ->
+            target.x == attackTarget.x && target.y == attackTarget.y
 
         _ ->
             False
+
+
+killCreeps : Model -> List Entity
+killCreeps model =
+    --model.creeps
+    --    |> List.map
+    --        (\c -> { c | health = c.health - (numTurretAttackers model.structures c) })
+    --    |> List.filter
+    --        (\c -> c.health > 0)
+    model.creeps
 
 
 spawnStructures : List Entity -> Entity -> List Entity
@@ -64,25 +77,25 @@ spawnStructures creeps hero =
             facing hero
     in
         case hero.action of
-            Build ->
+            Build structureType ->
                 -- If a creep moved into where hero is building, destroy that
                 -- building.
                 if List.any (\c -> c.x == x && c.y == y) creeps then
                     []
                 else
-                    [ createBlock x y ]
+                    [ createStructure structureType x y ]
 
             _ ->
                 []
 
 
-createBlock : Int -> Int -> Entity
-createBlock x y =
+createStructure : StructureType -> Int -> Int -> Entity
+createStructure structureType x y =
     let
-        block =
-            Structure.createBlock
+        structure =
+            Structure.create structureType
     in
-        { block | x = x, y = y }
+        { structure | x = x, y = y }
 
 
 move : Entity -> Entity

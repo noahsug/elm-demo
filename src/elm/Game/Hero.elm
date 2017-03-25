@@ -7,7 +7,13 @@ import Game.Grid as Grid
 import Game.Model exposing (..)
 import Game.Movement as Movement
 import Game.Update as Update
-import Game.Utils exposing (directionToXY, xyToDirection, distanceFromCenter)
+import Game.Utils
+    exposing
+        ( directionToXY
+        , xyToDirection
+        , distanceFromCenter
+        , facing
+        )
 
 
 create : Entity
@@ -99,7 +105,7 @@ evalBuildPlan plan model =
                     xyToDirection dx dy
 
                 choice =
-                    Choice Build direction
+                    Choice (Build plan.build) direction
             in
                 if choiceIsSafe choice model then
                     EvaluatedChoice choice plan.eval
@@ -222,10 +228,10 @@ doSurvivalActions model =
 
 choices : List Choice
 choices =
-    [ Choice Build Up
-    , Choice Build Right
-    , Choice Build Left
-    , Choice Build Down
+    [ Choice (Build Block) Up
+    , Choice (Build Block) Right
+    , Choice (Build Block) Left
+    , Choice (Build Block) Down
     , Choice Move Up
     , Choice Move Right
     , Choice Move Left
@@ -288,18 +294,26 @@ makeCreepChoices model =
 
 isValidChoice : Model -> Choice -> Bool
 isValidChoice model { action, direction } =
-    if action == Move || action == Build then
-        let
-            ( dx, dy ) =
-                directionToXY direction
+    let
+        needsEmptySquare =
+            case action of
+                Move ->
+                    True
 
-            x =
-                model.hero.x + dx
+                Build _ ->
+                    True
 
-            y =
-                model.hero.y + dy
-        in
-            (Grid.get model x y == Nothing)
-                && Grid.inBounds model.hero.x model.hero.y
-    else
-        True
+                _ ->
+                    False
+    in
+        if needsEmptySquare then
+            let
+                ( dx, dy ) =
+                    directionToXY direction
+
+                ( x, y ) =
+                    ( model.hero.x + dx, model.hero.y + dy )
+            in
+                Grid.inBounds x y && Grid.get model x y == Nothing
+        else
+            True
