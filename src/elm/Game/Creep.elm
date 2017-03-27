@@ -1,4 +1,4 @@
-module Game.Creep exposing (create, create2, makeChoice)
+module Game.Creep exposing (create, makeChoice)
 
 import Game.Model exposing (..)
 import Game.Utils exposing (xyToDirection, facing, position, isStructure, isTurret)
@@ -6,29 +6,16 @@ import Game.Movement exposing (..)
 import Maybe.Extra
 
 
-create : Entity
-create =
-    { action = Move
-    , direction = Right
-    , x = -6
-    , y = 0
-    , px = -6
-    , py = 0
+create : Int -> Int -> Entity
+create x y =
+    { action = NoAction
+    , direction = Down
+    , x = x
+    , y = y
+    , px = x
+    , py = y
     , kind = Creep
     , health = 4
-    }
-
-
-create2 : Entity
-create2 =
-    { action = Move
-    , direction = Right
-    , x = 6
-    , y = 6
-    , px = 6
-    , py = 6
-    , kind = Creep
-    , health = 1
     }
 
 

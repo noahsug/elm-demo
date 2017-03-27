@@ -44,6 +44,7 @@ type alias Model =
     , creeps : List Entity
     , structures : List Entity
     , gameOver : Bool
+    , ticks : Int
     }
 
 

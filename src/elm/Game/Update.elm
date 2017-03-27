@@ -60,16 +60,6 @@ isAttackingEntity target entity =
             False
 
 
-killCreeps : Model -> List Entity
-killCreeps model =
-    --model.creeps
-    --    |> List.map
-    --        (\c -> { c | health = c.health - (numTurretAttackers model.structures c) })
-    --    |> List.filter
-    --        (\c -> c.health > 0)
-    model.creeps
-
-
 spawnStructures : List Entity -> Entity -> List Entity
 spawnStructures creeps hero =
     let
