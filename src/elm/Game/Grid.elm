@@ -11,17 +11,11 @@ positions =
         |> List.map
             (\i ->
                 let
-                    dx =
-                        i // Config.heroRadius
-
-                    dy =
-                        i % Config.heroRadius
-
                     x =
-                        dx - Config.heroRadius
+                        i // (Config.heroRadius * 2) - Config.heroRadius
 
                     y =
-                        dy - Config.heroRadius
+                        i % (Config.heroRadius * 2) - Config.heroRadius
                 in
                     ( x, y )
             )
@@ -36,4 +30,4 @@ get model x y =
 
 inBounds : Int -> Int -> Bool
 inBounds x y =
-    x * x + y * y <= Config.heroRadius * Config.heroRadius
+    x * x + y * y < Config.heroRadius * Config.heroRadius

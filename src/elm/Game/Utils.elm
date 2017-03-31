@@ -95,3 +95,13 @@ isTurret entity =
 
         _ ->
             False
+
+
+isBlock : Entity -> Bool
+isBlock entity =
+    case entity.kind of
+        Structure Block ->
+            True
+
+        _ ->
+            False

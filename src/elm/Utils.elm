@@ -52,3 +52,12 @@ normalize value =
         0
     else
         sign value
+
+
+(??) : (a -> Bool) -> Maybe a -> Bool
+(??) test maybe =
+    case maybe of
+        Nothing ->
+            False
+        Just value ->
+            test value

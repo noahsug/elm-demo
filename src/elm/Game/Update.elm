@@ -73,19 +73,10 @@ spawnStructures creeps hero =
                 if List.any (\c -> c.x == x && c.y == y) creeps then
                     []
                 else
-                    [ createStructure structureType x y ]
+                    [ Structure.create structureType x y ]
 
             _ ->
                 []
-
-
-createStructure : StructureType -> Int -> Int -> Entity
-createStructure structureType x y =
-    let
-        structure =
-            Structure.create structureType
-    in
-        { structure | x = x, y = y }
 
 
 move : Entity -> Entity

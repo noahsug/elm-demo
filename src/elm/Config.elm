@@ -26,3 +26,8 @@ heroRadius =
 gameUpdateTime : Float
 gameUpdateTime =
     0.35
+
+
+ticksUntilGameOver : Int
+ticksUntilGameOver =
+    100

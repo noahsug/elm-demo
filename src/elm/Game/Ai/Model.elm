@@ -8,4 +8,8 @@ type alias BuildPlan =
     , y : Int
     , build : StructureType
     , eval : Float
+    --, d : Float
+    --, t : Float
+    --, c : Float
+    --, h : Float
     }

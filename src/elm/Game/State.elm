@@ -1,4 +1,4 @@
-module Game.State exposing (init, update)
+module Game.State exposing (init, update, spawnCreep)
 
 import Game.Creep as Creep
 import Game.Hero as Hero
@@ -12,6 +12,10 @@ init =
     { hero = Hero.create
     , creeps = [ ]
     , structures = []
+          --[ Structure.create Block 2 -3
+          --, Structure.create Block 2 -1
+          --, Structure.create Block 3 -2
+          --]
     , gameOver = False
     , ticks = 0
     }
@@ -20,7 +24,7 @@ init =
 update : Model -> Model
 update model =
     model
-        |> spawnCreeps
+        --|> spawnCreeps
         |> Update.execute
         |> makeHeroChoice
         |> makeCreepChoices
@@ -35,13 +39,21 @@ tick model =
     { model | ticks = model.ticks + 1 }
 
 
+spawnCreep : (Int, Int) -> Model -> Model
+spawnCreep pos model =
+    let
+        creep = uncurry Creep.create pos
+    in
+        { model | creeps = creep :: model.creeps }
+
+
 spawnCreeps : Model -> Model
 spawnCreeps model =
-    if model.ticks % 3 /= 0 then
+    if model.ticks % 4 /= 0 then
         model
     else
         let
-            creep = case (model.ticks // 3) % 8 of
+            creep = case (model.ticks // 4) % 8 of
                         0 ->
                             Creep.create 0 10
                         1 ->

@@ -2,28 +2,34 @@ module View exposing (view)
 
 import Collage
 import Color
-import Config exposing (gridSize, heroRadius)
+import Config exposing (gridSize, heroRadius, ticksUntilGameOver)
 import Element
 import Game.Model exposing (Entity, EntityType(..), StructureType(..), Action(..))
 import Game.Utils exposing (directionToXY)
 import Html
+import Input
 import Model exposing (Model)
 import Msg exposing (..)
 import Screen
+import Text
 
 
 view : Model -> Html.Html Msg
 view model =
-    Element.toHtml
-        (Collage.collage
-            (Screen.actualWidth model.screen)
-            (Screen.actualHeight model.screen)
-            (drawBackground model
-                ++ [ drawEntity model model.game.hero ]
-                ++ List.map (drawEntity model) model.game.creeps
-                ++ List.map (drawEntity model) model.game.structures
+    Html.section
+        [ Input.onClick Click ]
+        [ Element.toHtml
+            (Collage.collage
+                (Screen.actualWidth model.screen)
+                (Screen.actualHeight model.screen)
+                (drawBackground model
+                    ++ [ drawTicks model ]
+                    ++ [ drawEntity model model.game.hero ]
+                    ++ List.map (drawEntity model) model.game.creeps
+                    ++ List.map (drawEntity model) model.game.structures
+                )
             )
-        )
+        ]
 
 
 drawBackground : Model -> List Collage.Form
@@ -40,6 +46,19 @@ drawBackground model =
         )
         |> Collage.filled (Color.rgba 255 255 255 0.1)
     ]
+
+
+drawTicks : Model -> Collage.Form
+drawTicks model =
+    Text.fromString (toString (ticksUntilGameOver - model.game.ticks))
+        |> Text.color Color.white
+        |> Text.typeface [ "helvetica", "arial", "sans-serif" ]
+        |> Element.centered
+        |> Collage.toForm
+        |> Collage.move
+            ( toFloat <| 0
+            , toFloat <| Screen.actualHeight model.screen // 2 - 20
+            )
 
 
 drawEntity : Model -> Entity -> Collage.Form

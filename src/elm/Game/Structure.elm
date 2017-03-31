@@ -5,8 +5,8 @@ import Game.Utils exposing (distanceFromEntity, directionToEntity)
 import List.Extra
 
 
-create : StructureType -> Entity
-create structureType =
+create : StructureType -> Int -> Int -> Entity
+create structureType x y =
     let
         health =
             case structureType of
@@ -18,10 +18,10 @@ create structureType =
     in
         { action = NoAction
         , direction = Down
-        , x = 0
-        , y = 0
-        , px = 0
-        , py = 0
+        , x = x
+        , y = y
+        , px = x
+        , py = y
         , kind = Structure structureType
         , health = health
         }
