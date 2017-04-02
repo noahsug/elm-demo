@@ -8,7 +8,7 @@ import Game.Model exposing (Entity, EntityType(..), StructureType(..), Action(..
 import Game.Utils exposing (directionToXY)
 import Html
 import Input
-import Model exposing (Model)
+import Model exposing (..)
 import Msg exposing (..)
 import Screen
 import Text
@@ -23,10 +23,10 @@ view model =
                 (Screen.actualWidth model.screen)
                 (Screen.actualHeight model.screen)
                 (drawBackground model
-                    ++ [ drawTicks model ]
                     ++ [ drawEntity model model.game.hero ]
                     ++ List.map (drawEntity model) model.game.creeps
                     ++ List.map (drawEntity model) model.game.structures
+                    ++ drawStateInfo model
                 )
             )
         ]
@@ -48,6 +48,35 @@ drawBackground model =
     ]
 
 
+drawStateInfo : Model -> List Collage.Form
+drawStateInfo model =
+    case model.state of
+        Intro ->
+            [ drawIntro model ]
+
+        Playing ->
+            [ drawTicks model ]
+
+        Won ->
+            [ drawFade model, drawWon model, drawContinue model ]
+
+        Lost ->
+            [ drawFade model, drawLost model, drawContinue model ]
+
+
+drawIntro : Model -> Collage.Form
+drawIntro model =
+    Text.fromString "click to spawn a circle"
+        |> Text.color Color.white
+        |> Text.typeface [ "helvetica", "arial", "sans-serif" ]
+        |> Element.centered
+        |> Collage.toForm
+        |> Collage.move
+            ( toFloat <| 0
+            , toFloat <| Screen.actualHeight model.screen // 4
+            )
+
+
 drawTicks : Model -> Collage.Form
 drawTicks model =
     Text.fromString (toString (ticksUntilGameOver - model.game.ticks))
@@ -59,6 +88,53 @@ drawTicks model =
             ( toFloat <| 0
             , toFloat <| Screen.actualHeight model.screen // 2 - 20
             )
+
+
+drawWon : Model -> Collage.Form
+drawWon model =
+    Text.fromString ("You won with " ++ toString model.clicks ++ " clicks")
+        |> Text.color Color.white
+        |> Text.typeface [ "helvetica", "arial", "sans-serif" ]
+        |> Element.centered
+        |> Collage.toForm
+        |> Collage.move
+            ( toFloat <| 0
+            , toFloat <| Screen.actualHeight model.screen // 4
+            )
+
+
+drawLost : Model -> Collage.Form
+drawLost model =
+    Text.fromString "You Lose"
+        |> Text.color Color.white
+        |> Text.typeface [ "helvetica", "arial", "sans-serif" ]
+        |> Element.centered
+        |> Collage.toForm
+        |> Collage.move
+            ( toFloat <| 0
+            , toFloat <| Screen.actualHeight model.screen // 4
+            )
+
+
+drawContinue : Model -> Collage.Form
+drawContinue model =
+    Text.fromString "click to continue"
+        |> Text.color Color.white
+        |> Text.typeface [ "helvetica", "arial", "sans-serif" ]
+        |> Element.centered
+        |> Collage.toForm
+        |> Collage.move
+            ( toFloat <| 0
+            , toFloat <| Screen.actualHeight model.screen // -4
+            )
+
+
+drawFade : Model -> Collage.Form
+drawFade model =
+    Collage.rect
+        (toFloat (Screen.actualWidth model.screen))
+        (toFloat (Screen.actualHeight model.screen))
+        |> Collage.filled (Color.rgba 21 27 31 0.5)
 
 
 drawEntity : Model -> Entity -> Collage.Form

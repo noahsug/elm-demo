@@ -5,8 +5,9 @@ import Screen
 
 
 type State
-    = Win
-    | Lose
+    = Intro
+    | Won
+    | Lost
     | Playing
 
 
@@ -15,5 +16,6 @@ type alias Model =
     , game : Game.Model
     , screen : Screen.Model
     , state : State
+    , clicks : Int
     , runUntil : Float
     }

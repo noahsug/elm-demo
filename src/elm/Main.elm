@@ -27,13 +27,17 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.runUntil > 0 then
-        Sub.batch
-            [ AnimationFrame.diffs Tick
-            , Window.resizes Resize
-            ]
-    else
-        Sub.none
+    --if model.runUntil > 0 then
+    --    Sub.batch
+    --        [ AnimationFrame.diffs Tick
+    --        , Window.resizes Resize
+    --        ]
+    --else
+    --    Sub.none
+    Sub.batch
+        [ AnimationFrame.diffs Tick
+        , Window.resizes Resize
+        ]
 
 
 init : ( Model, Cmd Msg )
@@ -41,8 +45,9 @@ init =
     ( { timeUntilGameUpdate = 0
       , game = Game.State.init
       , screen = Screen.init
-      , state = Playing
-      , runUntil = Config.gameUpdateTime * 5
+      , state = Intro
+      , clicks = 0
+      , runUntil = Config.gameUpdateTime * 50
       }
     , Task.perform Resize Window.size
     )
@@ -53,6 +58,22 @@ update msg model =
     case msg of
         Resize size ->
             ( { model | screen = Screen.resize size model.screen }, Cmd.none )
+
+        Click _ ->
+            updatePlaying msg <|
+                case model.state of
+                    Intro ->
+                        { model | state = Playing }
+
+                    Playing ->
+                        model
+
+                    _ ->
+                        { model
+                            | state = Playing
+                            , game = Game.State.init
+                            , clicks = 0
+                        }
 
         _ ->
             case model.state of
@@ -88,7 +109,8 @@ updatePlaying msg model =
 
         Click position ->
             ( { model
-                | game =
+                | clicks = model.clicks + 1
+                , game =
                     Game.State.spawnCreep
                         (creepXY model position)
                         model.game
@@ -103,9 +125,9 @@ updatePlaying msg model =
 gameState : Game.Model -> State
 gameState game =
     if game.gameOver then
-        Win
+        Won
     else if game.ticks >= Config.ticksUntilGameOver then
-        Lose
+        Lost
     else
         Playing
 
