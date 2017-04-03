@@ -226,7 +226,7 @@ nextState choice model =
 
 maxDepth : Int
 maxDepth =
-    4
+    3
 
 
 maxEvalValue : Float

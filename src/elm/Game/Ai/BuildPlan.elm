@@ -25,7 +25,7 @@ buildLocations =
 
 buildPlans : Model -> List BuildPlan
 buildPlans model =
-    Grid.positions
+    buildLocations
         |> List.filter (\( x, y ) -> Grid.get model x y == Nothing)
         |> List.map
             (\( x, y ) ->
@@ -63,6 +63,7 @@ buildPlans model =
             )
         |> List.filter (\buildPlan -> buildPlan.eval > -1000)
         |> List.sortBy (\buildPlan -> -buildPlan.eval)
+        |> List.take 60
 
 
 turretEval : Model -> Int -> Int -> Float
@@ -188,17 +189,17 @@ heroCanMove model x y =
 
 canWalkToCenter : Model -> Int -> Int -> Bool
 canWalkToCenter model x y =
-    walkToCenter model x y model.hero.x model.hero.y /= Nothing
+    walkTo model x y 0 0 model.hero.x model.hero.y /= Nothing
 
 
-walkToCenter : Model -> Int -> Int -> Int -> Int -> Maybe ( Int, Int )
-walkToCenter model blockedX blockedY x y =
+walkTo : Model -> Int -> Int -> Int -> Int -> Int -> Int -> Maybe ( Int, Int )
+walkTo model blockedX blockedY targetX targetY x y =
     let
         newX =
-            x - normalize x
+            x + normalize (targetX - x)
 
         newY =
-            y - normalize y
+            y + normalize (targetY - y)
 
         collideX =
             (newX == blockedX && y == blockedY)
@@ -208,12 +209,12 @@ walkToCenter model blockedX blockedY x y =
             (x == blockedX && newY == blockedY)
                 || (isStructure ?? Grid.get model x newY)
     in
-        if x == 0 && y == 0 then
-            Just ( 0, 0 )
+        if x == targetX && y == targetY then
+            Just ( targetX, targetY )
         else if newY /= y && not collideY then
-            walkToCenter model blockedX blockedY x newY
+            walkTo model blockedX blockedY targetX targetY x newY
         else if newX /= x && not collideX then
-            walkToCenter model blockedX blockedY newX y
+            walkTo model blockedX blockedY targetX targetY newX y
         else
             Nothing
 

@@ -24,7 +24,7 @@ init =
 update : Model -> Model
 update model =
     model
-        --|> spawnCreeps
+        |> spawnCreeps
         |> Update.execute
         |> makeHeroChoice
         |> makeCreepChoices
@@ -49,11 +49,11 @@ spawnCreep pos model =
 
 spawnCreeps : Model -> Model
 spawnCreeps model =
-    if model.ticks % 4 /= 0 then
+    if model.ticks % 3 /= 0 then
         model
     else
         let
-            creep = case (model.ticks // 4) % 8 of
+            creep = case (model.ticks // 3) % 8 of
                         0 ->
                             Creep.create 0 10
                         1 ->

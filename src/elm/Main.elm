@@ -27,17 +27,17 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    --if model.runUntil > 0 then
-    --    Sub.batch
-    --        [ AnimationFrame.diffs Tick
-    --        , Window.resizes Resize
-    --        ]
-    --else
-    --    Sub.none
-    Sub.batch
-        [ AnimationFrame.diffs Tick
-        , Window.resizes Resize
-        ]
+    if model.runUntil > 0 then
+        Sub.batch
+            [ AnimationFrame.diffs Tick
+            , Window.resizes Resize
+            ]
+    else
+        Sub.none
+    --Sub.batch
+    --    [ AnimationFrame.diffs Tick
+    --    , Window.resizes Resize
+    --    ]
 
 
 init : ( Model, Cmd Msg )
@@ -47,7 +47,7 @@ init =
       , screen = Screen.init
       , state = Intro
       , clicks = 0
-      , runUntil = Config.gameUpdateTime * 50
+      , runUntil = Config.gameUpdateTime * 20
       }
     , Task.perform Resize Window.size
     )
