@@ -27,17 +27,17 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.runUntil > 0 then
-        Sub.batch
-            [ AnimationFrame.diffs Tick
-            , Window.resizes Resize
-            ]
-    else
-        Sub.none
-    --Sub.batch
-    --    [ AnimationFrame.diffs Tick
-    --    , Window.resizes Resize
-    --    ]
+    --if model.runUntil > 0 then
+    --    Sub.batch
+    --        [ AnimationFrame.diffs Tick
+    --        , Window.resizes Resize
+    --        ]
+    --else
+    --    Sub.none
+    Sub.batch
+        [ AnimationFrame.diffs Tick
+        , Window.resizes Resize
+        ]
 
 
 init : ( Model, Cmd Msg )
@@ -46,7 +46,6 @@ init =
       , game = Game.State.init
       , screen = Screen.init
       , state = Intro
-      , clicks = 0
       , runUntil = Config.gameUpdateTime * 20
       }
     , Task.perform Resize Window.size
@@ -72,7 +71,6 @@ update msg model =
                         { model
                             | state = Playing
                             , game = Game.State.init
-                            , clicks = 0
                         }
 
         _ ->
@@ -109,8 +107,7 @@ updatePlaying msg model =
 
         Click position ->
             ( { model
-                | clicks = model.clicks + 1
-                , game =
+                | game =
                     Game.State.spawnCreep
                         (creepXY model position)
                         model.game
@@ -126,7 +123,8 @@ gameState : Game.Model -> State
 gameState game =
     if game.gameOver then
         Won
-    else if game.ticks >= Config.ticksUntilGameOver then
+    else if game.ticks >= Config.ticksUntilGameOver ||
+           List.length game.creeps + List.length game.creepLine == 0 then
         Lost
     else
         Playing

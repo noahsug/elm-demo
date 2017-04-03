@@ -1,5 +1,6 @@
 module Game.State exposing (init, update, spawnCreep)
 
+import Config
 import Game.Creep as Creep
 import Game.Hero as Hero
 import Game.Model exposing (..)
@@ -10,12 +11,17 @@ import Game.Update as Update
 init : Model
 init =
     { hero = Hero.create
-    , creeps = [ ]
+    , creeps = []
     , structures = []
-          --[ Structure.create Block 2 -3
-          --, Structure.create Block 2 -1
-          --, Structure.create Block 3 -2
-          --]
+    , creepLine =
+        [ Creep.createTank
+        , Creep.createDmg
+        , Creep.createDmg
+        , Creep.createDmg
+        , Creep.createTank
+        , Creep.createTank
+        ]
+    , creepsSpawned = 0
     , gameOver = False
     , ticks = 0
     }
@@ -24,7 +30,7 @@ init =
 update : Model -> Model
 update model =
     model
-        |> spawnCreeps
+        --|> spawnCreeps
         |> Update.execute
         |> makeHeroChoice
         |> makeCreepChoices
@@ -33,18 +39,33 @@ update model =
         |> tick
 
 
-
 tick : Model -> Model
 tick model =
     { model | ticks = model.ticks + 1 }
 
 
-spawnCreep : (Int, Int) -> Model -> Model
+spawnCreep : ( Int, Int ) -> Model -> Model
 spawnCreep pos model =
-    let
-        creep = uncurry Creep.create pos
-    in
-        { model | creeps = creep :: model.creeps }
+    if model.creepsSpawned * Config.creepReadyRate <= model.ticks then
+        case model.creepLine of
+            spawn :: line ->
+                let
+                    ( x, y ) =
+                        pos
+
+                    creep =
+                        { spawn | x = x, y = y }
+                in
+                    { model
+                        | creeps = creep :: model.creeps
+                        , creepLine = line
+                        , creepsSpawned = model.creepsSpawned + 1
+                    }
+
+            _ ->
+                model
+    else
+        model
 
 
 spawnCreeps : Model -> Model
@@ -53,23 +74,31 @@ spawnCreeps model =
         model
     else
         let
-            creep = case (model.ticks // 3) % 8 of
-                        0 ->
-                            Creep.create 0 10
-                        1 ->
-                            Creep.create 0 -10
-                        2 ->
-                            Creep.create 10 0
-                        3 ->
-                            Creep.create -10 0
-                        4 ->
-                            Creep.create 7 7
-                        5 ->
-                            Creep.create 7 -7
-                        6 ->
-                            Creep.create -7 7
-                        _ ->
-                            Creep.create -7 -7
+            creep =
+                case (model.ticks // 3) % 8 of
+                    0 ->
+                        Creep.create 0 10
+
+                    1 ->
+                        Creep.create 0 -10
+
+                    2 ->
+                        Creep.create 10 0
+
+                    3 ->
+                        Creep.create -10 0
+
+                    4 ->
+                        Creep.create 7 7
+
+                    5 ->
+                        Creep.create 7 -7
+
+                    6 ->
+                        Creep.create -7 7
+
+                    _ ->
+                        Creep.create -7 -7
         in
             { model | creeps = creep :: model.creeps }
 

@@ -2,7 +2,7 @@ module View exposing (view)
 
 import Collage
 import Color
-import Config exposing (gridSize, heroRadius, ticksUntilGameOver)
+import Config exposing (gridSize, heroRadius, ticksUntilGameOver, creepReadyRate)
 import Element
 import Game.Model exposing (Entity, EntityType(..), StructureType(..), Action(..))
 import Game.Utils exposing (directionToXY)
@@ -55,7 +55,7 @@ drawStateInfo model =
             [ drawIntro model ]
 
         Playing ->
-            [ drawTicks model ]
+            [ drawCreepLine model ]
 
         Won ->
             [ drawFade model, drawWon model, drawContinue model ]
@@ -90,9 +90,26 @@ drawTicks model =
             )
 
 
+drawCreepLine : Model -> Collage.Form
+drawCreepLine model =
+    let
+        ready = (model.game.ticks - (model.game.creepsSpawned - 1) * creepReadyRate) // 3
+        canSpawn = min ready (List.length model.game.creepLine)
+    in
+        Text.fromString (toString canSpawn)
+            |> Text.color Color.white
+            |> Text.typeface [ "helvetica", "arial", "sans-serif" ]
+            |> Element.centered
+            |> Collage.toForm
+            |> Collage.move
+                ( toFloat <| 0
+                , toFloat <| Screen.actualHeight model.screen // 2 - 20
+                )
+
+
 drawWon : Model -> Collage.Form
 drawWon model =
-    Text.fromString ("You won with " ++ toString model.clicks ++ " clicks")
+    Text.fromString ("You won with " ++ toString model.game.creepsSpawned ++ " clicks")
         |> Text.color Color.white
         |> Text.typeface [ "helvetica", "arial", "sans-serif" ]
         |> Element.centered

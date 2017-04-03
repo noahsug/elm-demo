@@ -1,4 +1,4 @@
-module Game.Creep exposing (create, makeChoice)
+module Game.Creep exposing (create, createTank, createDmg, makeChoice)
 
 import Game.Model exposing (..)
 import Game.Utils exposing (xyToDirection, facing, position, isStructure, isTurret)
@@ -8,14 +8,35 @@ import Maybe.Extra
 
 create : Int -> Int -> Entity
 create x y =
+    let
+        creep = createTank
+    in
+        { creep | x = x, y = y, px = x, py = y }
+
+
+createTank : Entity
+createTank =
     { action = NoAction
     , direction = Down
-    , x = x
-    , y = y
-    , px = x
-    , py = y
+    , x = 0
+    , y = 0
+    , px = 0
+    , py = 0
     , kind = Creep
-    , health = 4
+    , health = 6
+    }
+
+
+createDmg : Entity
+createDmg =
+    { action = NoAction
+    , direction = Down
+    , x = 0
+    , y = 0
+    , px = 0
+    , py = 0
+    , kind = Creep
+    , health = 2
     }
 
 
