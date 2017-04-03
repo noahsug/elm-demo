@@ -1,43 +1,39 @@
-module Game.Creep exposing (create, createTank, createDmg, makeChoice)
+module Game.Creep exposing (create, makeChoice)
 
 import Game.Model exposing (..)
-import Game.Utils exposing (xyToDirection, facing, position, isStructure, isTurret)
 import Game.Movement exposing (..)
+import Game.Utils
+    exposing
+        ( xyToDirection
+        , facing
+        , position
+        , isStructure
+        , isTurret
+        , createEntity
+        )
 import Maybe.Extra
 
 
-create : Int -> Int -> Entity
-create x y =
+create : CreepType -> Entity
+create kind =
     let
-        creep = createTank
+        { health, dmg } =
+            case kind of
+                Tank ->
+                    { health = 6
+                    , dmg = 1
+                    }
+
+                Dmg ->
+                    { health = 3
+                    , dmg = 3
+                    }
     in
-        { creep | x = x, y = y, px = x, py = y }
-
-
-createTank : Entity
-createTank =
-    { action = NoAction
-    , direction = Down
-    , x = 0
-    , y = 0
-    , px = 0
-    , py = 0
-    , kind = Creep
-    , health = 6
-    }
-
-
-createDmg : Entity
-createDmg =
-    { action = NoAction
-    , direction = Down
-    , x = 0
-    , y = 0
-    , px = 0
-    , py = 0
-    , kind = Creep
-    , health = 2
-    }
+        { createEntity
+            | kind = Creep kind
+            , health = health
+            , dmg = dmg
+        }
 
 
 makeChoice : Model -> Entity -> Entity
@@ -175,7 +171,12 @@ isValidMovement creep move =
     else
         case move.collide of
             Just entity ->
-                entity.kind /= Creep
+                case entity.kind of
+                    Creep _ ->
+                        False
+
+                    _ ->
+                        True
 
             Nothing ->
                 True
@@ -232,7 +233,7 @@ doMovement move creep =
                         Hero ->
                             KillHero
 
-                        Creep ->
+                        Creep _ ->
                             NoAction
 
                 Nothing ->

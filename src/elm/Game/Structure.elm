@@ -1,29 +1,25 @@
 module Game.Structure exposing (create, makeChoice)
 
 import Game.Model exposing (..)
-import Game.Utils exposing (distanceFromEntity, directionToEntity)
+import Game.Utils exposing (distanceFromEntity, directionToEntity, createEntity)
 import List.Extra
 
 
-create : StructureType -> Int -> Int -> Entity
-create structureType x y =
+create : StructureType -> Entity
+create structureType =
     let
-        health =
+        { health, dmg } =
             case structureType of
                 Block ->
-                    3
+                    { health = 3, dmg = 0 }
 
                 Turret ->
-                    1
+                    { health = 1, dmg = 1 }
     in
-        { action = NoAction
-        , direction = Down
-        , x = x
-        , y = y
-        , px = x
-        , py = y
-        , kind = Structure structureType
-        , health = health
+        { createEntity
+            | kind = Structure structureType
+            , health = health
+            , dmg = dmg
         }
 
 

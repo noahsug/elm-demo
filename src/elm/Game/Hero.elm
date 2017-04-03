@@ -14,20 +14,13 @@ import Game.Utils
         , xyToDirection
         , distanceFromCenter
         , facing
+        , createEntity
         )
 
 
 create : Entity
 create =
-    { action = NoAction
-    , direction = Down
-    , x = 0
-    , y = 0
-    , px = 0
-    , py = 0
-    , kind = Hero
-    , health = 1
-    }
+    createEntity
 
 
 type alias Choice =

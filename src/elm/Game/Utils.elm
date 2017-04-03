@@ -3,6 +3,20 @@ module Game.Utils exposing (..)
 import Game.Model exposing (..)
 
 
+createEntity : Entity
+createEntity =
+    { action = NoAction
+    , direction = Down
+    , x = 0
+    , y = 0
+    , px = 0
+    , py = 0
+    , kind = Hero
+    , health = 1
+    , dmg = 0
+    }
+
+
 xyToDirection : Int -> Int -> Direction
 xyToDirection x y =
     if x > 0 then

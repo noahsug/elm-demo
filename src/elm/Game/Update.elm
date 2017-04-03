@@ -38,16 +38,16 @@ killEntities : List Entity -> List Entity -> List Entity
 killEntities attackers entities =
     entities
         |> List.map
-            (\e -> { e | health = e.health - (numAttackers attackers e) })
+            (\e -> { e | health = e.health - (attackerDmg attackers e) })
         |> List.filter
             (\e -> e.health > 0)
 
 
-numAttackers : List Entity -> Entity -> Int
-numAttackers attackers target =
+attackerDmg : List Entity -> Entity -> Int
+attackerDmg attackers target =
     attackers
         |> List.filter (isAttackingEntity target)
-        |> List.length
+        |> List.foldl (\entity dmg -> entity.dmg + dmg) 0
 
 
 isAttackingEntity : Entity -> Entity -> Bool
@@ -73,7 +73,10 @@ spawnStructures creeps hero =
                 if List.any (\c -> c.x == x && c.y == y) creeps then
                     []
                 else
-                    [ Structure.create structureType x y ]
+                    let
+                        structure = Structure.create structureType
+                    in
+                        [ { structure | x = x, y = y } ]
 
             _ ->
                 []

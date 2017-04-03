@@ -4,7 +4,7 @@ import Collage
 import Color
 import Config exposing (gridSize, heroRadius, ticksUntilGameOver, creepReadyRate)
 import Element
-import Game.Model exposing (Entity, EntityType(..), StructureType(..), Action(..))
+import Game.Model exposing (Entity, EntityType(..), StructureType(..), CreepType(..), Action(..))
 import Game.Utils exposing (directionToXY)
 import Html
 import Input
@@ -160,8 +160,8 @@ drawEntity model entity =
         Hero ->
             drawHero model
 
-        Creep ->
-            drawCreep model entity
+        Creep kind ->
+            drawCreep model entity kind
 
         Structure Block ->
             drawBlock model entity
@@ -181,15 +181,22 @@ drawHero model =
             ( entityX model model.game.hero, entityY model model.game.hero )
 
 
-drawCreep : Model -> Entity -> Collage.Form
-drawCreep model creep =
-    Collage.circle
-        (Screen.toActual model.screen
-            (gridSize / 3)
-        )
-        |> Collage.filled (Color.rgb 255 112 67)
-        |> Collage.move
-            ( entityX model creep, entityY model creep )
+drawCreep : Model -> Entity -> CreepType -> Collage.Form
+drawCreep model creep kind =
+    let
+        color = case kind of
+            Tank ->
+                Color.rgb 200 167 67
+            Dmg ->
+                Color.rgb 255 112 67
+    in
+        Collage.circle
+            (Screen.toActual model.screen
+                (gridSize / 3)
+            )
+            |> Collage.filled color
+            |> Collage.move
+                ( entityX model creep, entityY model creep )
 
 
 drawBlock : Model -> Entity -> Collage.Form

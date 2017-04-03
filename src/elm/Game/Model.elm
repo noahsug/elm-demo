@@ -18,13 +18,18 @@ type Action
 
 type EntityType
     = Hero
-    | Creep
+    | Creep CreepType
     | Structure StructureType
 
 
 type StructureType
     = Block
     | Turret
+
+
+type CreepType
+    = Tank
+    | Dmg
 
 
 type alias Entity =
@@ -36,6 +41,7 @@ type alias Entity =
     , py : Int
     , kind : EntityType
     , health : Int
+    , dmg : Int
     }
 
 

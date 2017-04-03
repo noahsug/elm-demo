@@ -14,12 +14,12 @@ init =
     , creeps = []
     , structures = []
     , creepLine =
-        [ Creep.createTank
-        , Creep.createDmg
-        , Creep.createDmg
-        , Creep.createDmg
-        , Creep.createTank
-        , Creep.createTank
+        [ Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Dmg
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Tank
         ]
     , creepsSpawned = 0
     , gameOver = False
@@ -74,31 +74,33 @@ spawnCreeps model =
         model
     else
         let
-            creep =
+            (spawn, x, y) =
                 case (model.ticks // 3) % 8 of
                     0 ->
-                        Creep.create 0 10
+                        (Creep.create Tank, 0, 10)
 
                     1 ->
-                        Creep.create 0 -10
+                        (Creep.create Tank, 0, -10)
 
                     2 ->
-                        Creep.create 10 0
+                        (Creep.create Tank, 10, 0)
 
                     3 ->
-                        Creep.create -10 0
+                        (Creep.create Tank, -10, 0)
 
                     4 ->
-                        Creep.create 7 7
+                        (Creep.create Tank, 7, 7)
 
                     5 ->
-                        Creep.create 7 -7
+                        (Creep.create Tank, 7, -7)
 
                     6 ->
-                        Creep.create -7 7
+                        (Creep.create Tank, -7, 7)
 
                     _ ->
-                        Creep.create -7 -7
+                        (Creep.create Tank, -7, -7)
+
+            creep = { spawn | x = x, y = y }
         in
             { model | creeps = creep :: model.creeps }
 
