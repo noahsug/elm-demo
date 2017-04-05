@@ -5,8 +5,8 @@ import Game.Utils exposing (distanceFromEntity, directionToEntity, createEntity)
 import List.Extra
 
 
-create : EntityColor -> StructureType -> Entity
-create color structureType =
+create : StructureType -> Entity
+create structureType =
     let
         { health, dmg } =
             case structureType of
@@ -20,7 +20,6 @@ create color structureType =
             | kind = Structure structureType
             , health = health
             , dmg = dmg
-            , color = color
         }
 
 

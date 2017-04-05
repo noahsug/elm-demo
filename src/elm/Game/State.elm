@@ -15,23 +15,23 @@ init =
     , creeps = []
     , structures = []
     , creepLine =
-        [ Creep.create Red Tank
-        , Creep.create Blue Tank
-        , Creep.create Blue Tank
-        , Creep.create Green Tank
-        , Creep.create Red Tank
-        , Creep.create Green Tank
-        , Creep.create Red Tank
-        , Creep.create Blue Tank
-        , Creep.create Blue Tank
-        , Creep.create Green Tank
-        , Creep.create Green Tank
-        , Creep.create Green Tank
-        , Creep.create Blue Tank
-        , Creep.create Red Tank
-        , Creep.create Red Tank
-        , Creep.create Red Tank
-        , Creep.create Blue Tank
+        [ Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Tank
         ]
     , creepsSpawned = 0
     , gameOver = False
@@ -90,28 +90,28 @@ spawnCreeps model =
             ( spawn, x, y ) =
                 case (model.ticks // 3) % 8 of
                     0 ->
-                        ( Creep.create Red Tank, 0, 10 )
+                        ( Creep.create Tank, 0, 10 )
 
                     1 ->
-                        ( Creep.create Red Tank, 0, -10 )
+                        ( Creep.create Tank, 0, -10 )
 
                     2 ->
-                        ( Creep.create Red Tank, 10, 0 )
+                        ( Creep.create Tank, 10, 0 )
 
                     3 ->
-                        ( Creep.create Red Tank, -10, 0 )
+                        ( Creep.create Tank, -10, 0 )
 
                     4 ->
-                        ( Creep.create Red Tank, 7, 7 )
+                        ( Creep.create Tank, 7, 7 )
 
                     5 ->
-                        ( Creep.create Red Tank, 7, -7 )
+                        ( Creep.create Tank, 7, -7 )
 
                     6 ->
-                        ( Creep.create Red Tank, -7, 7 )
+                        ( Creep.create Tank, -7, 7 )
 
                     _ ->
-                        ( Creep.create Red Tank, -7, -7 )
+                        ( Creep.create Tank, -7, -7 )
 
             creep =
                 { spawn | x = x, y = y }

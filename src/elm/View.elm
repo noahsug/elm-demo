@@ -11,7 +11,6 @@ import Game.Model
         , StructureType(..)
         , CreepType(..)
         , Action(..)
-        , EntityColor(..)
         )
 import Game.Utils exposing (directionToXY, numSpawnableCreeps)
 import Html
@@ -217,10 +216,10 @@ creepForm model creep scale =
         color =
             case kind of
                 Tank ->
-                    getColor 200 67 creep.color
+                    Color.rgb 67 67 200
 
                 Dmg ->
-                    getColor 245 107 creep.color
+                    Color.rgb 200 67 67
     in
         Collage.circle
             (Screen.toActual model.screen
@@ -235,7 +234,7 @@ drawBlock model structure =
         (Screen.toActual model.screen
             (1.4 * gridSize / 2)
         )
-        |> Collage.filled (getColor 144 90 structure.color)
+        |> Collage.filled (Color.rgb 110 99 144)
         |> Collage.rotate (degrees 45)
         |> Collage.move
             ( entityX model structure, entityY model structure )
@@ -259,7 +258,7 @@ drawTurret model structure =
     in
         Collage.ngon 3
             (Screen.toActual model.screen gridSize / 2)
-            |> Collage.filled (getColor primaryColor 90 structure.color)
+            |> Collage.filled (Color.rgb 90 primaryColor 90)
             |> Collage.rotate (degrees 90)
             |> Collage.move
                 ( entityX model structure, entityY model structure )
@@ -343,19 +342,3 @@ gridToActual model gridValue =
     gridValue
         |> (*) gridSize
         |> Screen.toActual model.screen
-
-
-getColor : Int -> Int -> EntityColor -> Color.Color
-getColor primary secondary color =
-    let
-        (r, g, b) = case color of
-                        Red ->
-                            (primary, secondary, secondary)
-                        Green ->
-                            (secondary, primary, secondary)
-                        Blue ->
-                            (secondary, secondary, primary)
-                        _ ->
-                            (secondary, secondary, secondary)
-    in
-        Color.rgb r g b

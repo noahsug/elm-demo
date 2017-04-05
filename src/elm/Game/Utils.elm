@@ -15,7 +15,6 @@ createEntity =
     , kind = Hero
     , health = 1
     , dmg = 0
-    , color = White
     }
 
 
@@ -141,35 +140,3 @@ numSpawnableCreeps model =
                 + Config.startingCreeps
     in
         min ready (List.length model.creepLine)
-
-
-bestStructureColor : List Entity -> Int -> Int -> EntityColor
-bestStructureColor creeps x y =
-    let
-        maxDistance = Config.heroRadius * 20 // 14
-
-        (red, green, blue) = List.foldl
-            (\creep rgbTotals ->
-                 let
-                     (red, green, blue) = rgbTotals
-                     value = 2 + maxDistance - distanceFrom creep x y
-                 in
-                     case creep.color of
-                         Red ->
-                             (red + value, green, blue)
-                         Green ->
-                             (red, green + value, blue)
-                         Blue ->
-                             (red, green, blue + value)
-                         _ ->
-                             rgbTotals
-            )
-            (0, 0, 0)
-            creeps
-    in
-        if red >= green && red >= blue then
-            Blue
-        else if green >= blue then
-            Red
-        else
-            Green
