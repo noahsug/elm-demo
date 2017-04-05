@@ -12,6 +12,7 @@ import Game.Utils
     exposing
         ( directionToXY
         , xyToDirection
+        , closestEntity
         , distanceFromCenter
         , facing
         , createEntity
@@ -331,7 +332,26 @@ isValidChoice model { action, direction } =
 
                 ( x, y ) =
                     ( model.hero.x + dx, model.hero.y + dy )
+
+                usefulMovement =
+                    if action == Move then
+                        isNearBuildings model x y
+                    else
+                        True
             in
-                Grid.inBounds x y && Grid.get model x y == Nothing
+                Grid.inBounds x y
+                    && Grid.get model x y
+                    == Nothing
+                    && usefulMovement
         else
             True
+
+
+isNearBuildings : Model -> Int -> Int -> Bool
+isNearBuildings model x y =
+    case closestEntity model.structures x y of
+        Just ( distance, _ ) ->
+            distance < 3
+
+        Nothing ->
+            False

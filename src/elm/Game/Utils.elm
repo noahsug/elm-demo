@@ -1,6 +1,7 @@
 module Game.Utils exposing (..)
 
 import Config
+import Utils exposing ((??))
 import Game.Model exposing (..)
 
 
@@ -141,3 +142,25 @@ numSpawnableCreeps model =
     --in
     --    min ready (List.length model.creepLine)
     List.length model.creepLine
+
+
+closestEntity : List Entity -> Int -> Int -> Maybe ( Int, Entity )
+closestEntity entities x y =
+    List.foldl
+        (\entity maybeClosest ->
+            let
+                distance =
+                    distanceFrom entity x y
+            in
+                case maybeClosest of
+                    Just ( closestDistance, _ ) ->
+                        if distance < closestDistance then
+                            Just ( distance, entity )
+                        else
+                            maybeClosest
+
+                    Nothing ->
+                        Just ( distance, entity )
+        )
+        Nothing
+        entities
