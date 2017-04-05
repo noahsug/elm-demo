@@ -14,14 +14,14 @@ import Game.Utils
 import Maybe.Extra
 
 
-create : CreepType -> Entity
-create kind =
+create : EntityColor -> CreepType -> Entity
+create color kind =
     let
         { health, dmg } =
             case kind of
                 Tank ->
                     { health = 6
-                    , dmg = 1
+                    , dmg = 3
                     }
 
                 Dmg ->
@@ -33,6 +33,7 @@ create kind =
             | kind = Creep kind
             , health = health
             , dmg = dmg
+            , color = color
         }
 
 

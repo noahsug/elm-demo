@@ -5,21 +5,22 @@ import Game.Utils exposing (distanceFromEntity, directionToEntity, createEntity)
 import List.Extra
 
 
-create : StructureType -> Entity
-create structureType =
+create : EntityColor -> StructureType -> Entity
+create color structureType =
     let
         { health, dmg } =
             case structureType of
                 Block ->
-                    { health = 3, dmg = 0 }
+                    { health = 6, dmg = 0 }
 
                 Turret ->
-                    { health = 1, dmg = 1 }
+                    { health = 2, dmg = 2 }
     in
         { createEntity
             | kind = Structure structureType
             , health = health
             , dmg = dmg
+            , color = color
         }
 
 

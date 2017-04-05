@@ -32,6 +32,13 @@ type CreepType
     | Dmg
 
 
+type EntityColor
+    = Red
+    | Green
+    | Blue
+    | White
+
+
 type alias Entity =
     { action : Action
     , direction : Direction
@@ -42,6 +49,7 @@ type alias Entity =
     , kind : EntityType
     , health : Int
     , dmg : Int
+    , color: EntityColor
     }
 
 

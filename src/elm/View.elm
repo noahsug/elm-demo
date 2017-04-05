@@ -2,10 +2,18 @@ module View exposing (view)
 
 import Collage
 import Color
-import Config exposing (gridSize, heroRadius, ticksUntilGameOver, creepReadyRate)
+import Config exposing (gridSize, heroRadius, ticksUntilGameOver)
 import Element
-import Game.Model exposing (Entity, EntityType(..), StructureType(..), CreepType(..), Action(..))
-import Game.Utils exposing (directionToXY)
+import Game.Model
+    exposing
+        ( Entity
+        , EntityType(..)
+        , StructureType(..)
+        , CreepType(..)
+        , Action(..)
+        , EntityColor(..)
+        )
+import Game.Utils exposing (directionToXY, numSpawnableCreeps)
 import Html
 import Input
 import Model exposing (..)
@@ -55,7 +63,7 @@ drawStateInfo model =
             [ drawIntro model ]
 
         Playing ->
-            [ drawCreepLine model ]
+            drawCreepLine model
 
         Won ->
             [ drawFade model, drawWon model, drawContinue model ]
@@ -90,26 +98,33 @@ drawTicks model =
             )
 
 
-drawCreepLine : Model -> Collage.Form
+drawCreepLine : Model -> List Collage.Form
 drawCreepLine model =
-    let
-        ready = (model.game.ticks - (model.game.creepsSpawned - 1) * creepReadyRate) // 3
-        canSpawn = min ready (List.length model.game.creepLine)
-    in
-        Text.fromString (toString canSpawn)
-            |> Text.color Color.white
-            |> Text.typeface [ "helvetica", "arial", "sans-serif" ]
-            |> Element.centered
-            |> Collage.toForm
-            |> Collage.move
-                ( toFloat <| 0
-                , toFloat <| Screen.actualHeight model.screen // 2 - 20
-                )
+    model.game.creepLine
+        |> List.indexedMap
+            (\i creep ->
+                let
+                    canSpawn =
+                        i < numSpawnableCreeps model.game
+
+                    scale =
+                        if canSpawn then
+                            1
+                        else
+                            0.7
+                in
+                    creepForm model creep scale
+                        |> Collage.move
+                            ( Screen.toActual model.screen gridSize * toFloat i
+                            , Screen.toActual model.screen gridSize
+                                * toFloat (Config.heroRadius + 1)
+                            )
+            )
 
 
 drawWon : Model -> Collage.Form
 drawWon model =
-    Text.fromString ("You won with " ++ toString model.game.creepsSpawned ++ " clicks")
+    Text.fromString "You win!"
         |> Text.color Color.white
         |> Text.typeface [ "helvetica", "arial", "sans-serif" ]
         |> Element.centered
@@ -183,20 +198,35 @@ drawHero model =
 
 drawCreep : Model -> Entity -> CreepType -> Collage.Form
 drawCreep model creep kind =
+    creepForm model creep 1
+        |> Collage.move
+           ( entityX model creep, entityY model creep )
+
+
+creepForm : Model -> Entity -> Float -> Collage.Form
+creepForm model creep scale =
     let
-        color = case kind of
-            Tank ->
-                Color.rgb 200 167 67
-            Dmg ->
-                Color.rgb 255 112 67
+        kind =
+            case creep.kind of
+                Creep kind ->
+                    kind
+
+                _ ->
+                    Tank
+
+        color =
+            case kind of
+                Tank ->
+                    getColor 200 67 creep.color
+
+                Dmg ->
+                    getColor 245 107 creep.color
     in
         Collage.circle
             (Screen.toActual model.screen
-                (gridSize / 3)
+                (scale * gridSize / 3)
             )
             |> Collage.filled color
-            |> Collage.move
-                ( entityX model creep, entityY model creep )
 
 
 drawBlock : Model -> Entity -> Collage.Form
@@ -205,7 +235,7 @@ drawBlock model structure =
         (Screen.toActual model.screen
             (1.4 * gridSize / 2)
         )
-        |> Collage.filled (Color.rgb 141 110 99)
+        |> Collage.filled (getColor 144 90 structure.color)
         |> Collage.rotate (degrees 45)
         |> Collage.move
             ( entityX model structure, entityY model structure )
@@ -214,22 +244,22 @@ drawBlock model structure =
 drawTurret : Model -> Entity -> Collage.Form
 drawTurret model structure =
     let
-        baseGreen =
+        baseColor =
             144
 
-        green =
+        primaryColor =
             case structure.action of
                 Attack _ ->
-                    baseGreen
+                    baseColor
                         |> stepInterpolation model 100 0.8 1
                         |> round
 
                 _ ->
-                    baseGreen
+                    baseColor
     in
         Collage.ngon 3
             (Screen.toActual model.screen gridSize / 2)
-            |> Collage.filled (Color.rgb 110 green 99)
+            |> Collage.filled (getColor primaryColor 90 structure.color)
             |> Collage.rotate (degrees 90)
             |> Collage.move
                 ( entityX model structure, entityY model structure )
@@ -313,3 +343,19 @@ gridToActual model gridValue =
     gridValue
         |> (*) gridSize
         |> Screen.toActual model.screen
+
+
+getColor : Int -> Int -> EntityColor -> Color.Color
+getColor primary secondary color =
+    let
+        (r, g, b) = case color of
+                        Red ->
+                            (primary, secondary, secondary)
+                        Green ->
+                            (secondary, primary, secondary)
+                        Blue ->
+                            (secondary, secondary, primary)
+                        _ ->
+                            (secondary, secondary, secondary)
+    in
+        Color.rgb r g b

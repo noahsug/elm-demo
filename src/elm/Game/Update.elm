@@ -2,7 +2,7 @@ module Game.Update exposing (execute, resolve)
 
 import Game.Structure as Structure
 import Game.Model exposing (..)
-import Game.Utils exposing (facing, nextPosition, distanceFromEntity)
+import Game.Utils exposing (facing, nextPosition, distanceFromEntity, bestStructureColor)
 
 
 execute : Model -> Model
@@ -47,7 +47,7 @@ attackerDmg : List Entity -> Entity -> Int
 attackerDmg attackers target =
     attackers
         |> List.filter (isAttackingEntity target)
-        |> List.foldl (\entity dmg -> entity.dmg + dmg) 0
+        |> List.foldl (\entity dmg -> entityDmg entity target + dmg) 0
 
 
 isAttackingEntity : Entity -> Entity -> Bool
@@ -58,6 +58,30 @@ isAttackingEntity target entity =
 
         _ ->
             False
+
+
+entityDmg : Entity -> Entity -> Int
+entityDmg source target =
+    let
+        multiplier =
+            case ( source.color, target.color ) of
+                (Red, Green) ->
+                    2
+                (Green, Blue) ->
+                    2
+                (Blue, Red) ->
+                    2
+                (Red, Blue) ->
+                    0.5
+                (Green, Red) ->
+                    0.5
+                (Blue, Green) ->
+                    0.5
+                _ ->
+                    1
+    in
+        round (toFloat source.dmg * multiplier)
+
 
 
 spawnStructures : List Entity -> Entity -> List Entity
@@ -74,7 +98,11 @@ spawnStructures creeps hero =
                     []
                 else
                     let
-                        structure = Structure.create structureType
+                        color =
+                            bestStructureColor creeps x y
+
+                        structure =
+                            Structure.create color structureType
                     in
                         [ { structure | x = x, y = y } ]
 

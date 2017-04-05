@@ -1,5 +1,6 @@
 module Game.Utils exposing (..)
 
+import Config
 import Game.Model exposing (..)
 
 
@@ -14,6 +15,7 @@ createEntity =
     , kind = Hero
     , health = 1
     , dmg = 0
+    , color = White
     }
 
 
@@ -48,8 +50,11 @@ directionToXY dir =
 directionToEntity : Entity -> Entity -> Direction
 directionToEntity target source =
     let
-        dx = target.x - source.x
-        dy = target.y - source.y
+        dx =
+            target.x - source.x
+
+        dy =
+            target.y - source.y
     in
         if abs dx > abs dy then
             xyToDirection dx 0
@@ -74,6 +79,11 @@ distanceFromEntity e1 e2 =
 distanceFromCenter : Entity -> Int
 distanceFromCenter entity =
     (abs entity.x) + (abs entity.y)
+
+
+distanceFrom : Entity -> Int -> Int -> Int
+distanceFrom entity x y =
+    abs (entity.x - x) + abs (entity.y - y)
 
 
 position : Entity -> ( Int, Int )
@@ -119,3 +129,47 @@ isBlock entity =
 
         _ ->
             False
+
+
+numSpawnableCreeps : Model -> Int
+numSpawnableCreeps model =
+    let
+        ready =
+            model.ticks
+                // Config.creepReadyRate
+                - model.creepsSpawned
+                + Config.startingCreeps
+    in
+        min ready (List.length model.creepLine)
+
+
+bestStructureColor : List Entity -> Int -> Int -> EntityColor
+bestStructureColor creeps x y =
+    let
+        maxDistance = Config.heroRadius * 20 // 14
+
+        (red, green, blue) = List.foldl
+            (\creep rgbTotals ->
+                 let
+                     (red, green, blue) = rgbTotals
+                     value = 2 + maxDistance - distanceFrom creep x y
+                 in
+                     case creep.color of
+                         Red ->
+                             (red + value, green, blue)
+                         Green ->
+                             (red, green + value, blue)
+                         Blue ->
+                             (red, green, blue + value)
+                         _ ->
+                             rgbTotals
+            )
+            (0, 0, 0)
+            creeps
+    in
+        if red >= green && red >= blue then
+            Blue
+        else if green >= blue then
+            Red
+        else
+            Green

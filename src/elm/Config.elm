@@ -33,3 +33,8 @@ ticksUntilGameOver =
 creepReadyRate : Int
 creepReadyRate =
     3
+
+
+startingCreeps : Int
+startingCreeps =
+    3

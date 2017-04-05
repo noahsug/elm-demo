@@ -46,7 +46,7 @@ init =
       , game = Game.State.init
       , screen = Screen.init
       , state = Intro
-      , runUntil = Config.gameUpdateTime * 200
+      , runUntil = Config.gameUpdateTime * 1000
       }
     , Task.perform Resize Window.size
     )
