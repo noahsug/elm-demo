@@ -22,7 +22,7 @@ heroRadius =
 -- Seconds until the game logic updates.
 gameUpdateTime : Float
 gameUpdateTime =
-    0.35
+    0.5
 
 
 ticksUntilGameOver : Int
@@ -32,7 +32,7 @@ ticksUntilGameOver =
 
 creepReadyRate : Int
 creepReadyRate =
-    3
+    0
 
 
 startingCreeps : Int

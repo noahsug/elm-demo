@@ -132,11 +132,12 @@ isBlock entity =
 
 numSpawnableCreeps : Model -> Int
 numSpawnableCreeps model =
-    let
-        ready =
-            model.ticks
-                // Config.creepReadyRate
-                - model.creepsSpawned
-                + Config.startingCreeps
-    in
-        min ready (List.length model.creepLine)
+    --let
+    --    ready =
+    --        model.ticks
+    --            // Config.creepReadyRate
+    --            - model.creepsSpawned
+    --            + Config.startingCreeps
+    --in
+    --    min ready (List.length model.creepLine)
+    List.length model.creepLine

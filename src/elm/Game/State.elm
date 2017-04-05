@@ -22,16 +22,6 @@ init =
         , Creep.create Dmg
         , Creep.create Tank
         , Creep.create Tank
-        , Creep.create Dmg
-        , Creep.create Dmg
-        , Creep.create Tank
-        , Creep.create Tank
-        , Creep.create Dmg
-        , Creep.create Dmg
-        , Creep.create Tank
-        , Creep.create Dmg
-        , Creep.create Tank
-        , Creep.create Tank
         ]
     , creepsSpawned = 0
     , gameOver = False

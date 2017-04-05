@@ -109,7 +109,7 @@ updatePlaying msg model =
             ( { model
                 | game =
                     Game.State.spawnCreep
-                        (creepXY model position)
+                        (spawnPosition model position)
                         model.game
               }
             , Cmd.none
@@ -144,21 +144,20 @@ maybeUpdateGame dt model =
             ( timeUntilGameUpdate, model.game )
 
 
-creepXY : Model -> Input.Position -> ( Int, Int )
-creepXY model position =
+spawnPosition : Model -> Input.Position -> ( Int, Int )
+spawnPosition model position =
     let
         dx =
-            position.x - Screen.actualWidth model.screen // 2
+            toFloat position.x - toFloat (Screen.actualWidth model.screen) / 2
 
         dy =
-            position.y - Screen.actualHeight model.screen // 2
+            toFloat (Screen.actualHeight model.screen) / 2 - toFloat position.y
+
+        xFloat = sqrt <| toFloat (Config.heroRadius * Config.heroRadius) /
+            (1 + dy * dy / (dx * dx))
+
+        y = round (xFloat * dy / abs dx)
+
+        x = round (if dx < 0 then -xFloat else xFloat)
     in
-        if abs dx > abs dy then
-            if dx > 0 then
-                ( Config.heroRadius, 0 )
-            else
-                ( -Config.heroRadius, 0 )
-        else if dy > 0 then
-            ( 0, -Config.heroRadius )
-        else
-            ( 0, Config.heroRadius )
+        (x, y)

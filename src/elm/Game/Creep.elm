@@ -20,13 +20,13 @@ create kind =
         { health, dmg } =
             case kind of
                 Tank ->
-                    { health = 6
-                    , dmg = 3
+                    { health = 4
+                    , dmg = 1
                     }
 
                 Dmg ->
-                    { health = 3
-                    , dmg = 3
+                    { health = 2
+                    , dmg = 6
                     }
     in
         { createEntity

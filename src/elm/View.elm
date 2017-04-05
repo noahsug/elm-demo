@@ -33,6 +33,7 @@ view model =
                     ++ [ drawEntity model model.game.hero ]
                     ++ List.map (drawEntity model) model.game.creeps
                     ++ List.map (drawEntity model) model.game.structures
+                    ++ drawCreepLine model
                     ++ drawStateInfo model
                 )
             )
@@ -59,10 +60,10 @@ drawStateInfo : Model -> List Collage.Form
 drawStateInfo model =
     case model.state of
         Intro ->
-            [ drawIntro model ]
+            [ drawFade model, drawIntro model ]
 
         Playing ->
-            drawCreepLine model
+            []
 
         Won ->
             [ drawFade model, drawWon model, drawContinue model ]
@@ -216,10 +217,10 @@ creepForm model creep scale =
         color =
             case kind of
                 Tank ->
-                    Color.rgb 67 67 200
+                    Color.rgb 200 167 67
 
                 Dmg ->
-                    Color.rgb 200 67 67
+                    Color.rgb 255 112 67
     in
         Collage.circle
             (Screen.toActual model.screen
@@ -234,7 +235,7 @@ drawBlock model structure =
         (Screen.toActual model.screen
             (1.4 * gridSize / 2)
         )
-        |> Collage.filled (Color.rgb 110 99 144)
+        |> Collage.filled (Color.rgb 141 110 99)
         |> Collage.rotate (degrees 45)
         |> Collage.move
             ( entityX model structure, entityY model structure )
