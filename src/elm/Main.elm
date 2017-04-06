@@ -160,4 +160,7 @@ spawnPosition model position =
 
         x = round (if dx < 0 then -xFloat else xFloat)
     in
-        (x, y)
+        if isNaN (toFloat x) || isNaN (toFloat y) then
+            (0, Config.heroRadius)
+        else
+            (x, y)

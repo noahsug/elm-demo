@@ -5,7 +5,14 @@ import Game.Ai.Config as Config
 import Game.Ai.Model exposing (..)
 import Game.Grid as Grid
 import Game.Model exposing (..)
-import Game.Utils exposing (isTurret, isBlock, isStructure, distanceFromEntity)
+import Game.Utils
+    exposing
+        ( isTurret
+        , isBlock
+        , isStructure
+        , distanceFromEntity
+        , distanceFrom
+        )
 import Utils exposing (normalize, (??))
 
 
@@ -68,10 +75,9 @@ buildPlans model =
 
 turretEval : Model -> Int -> Int -> Float
 turretEval model x y =
-    Config.buildTurret
+    0
         + distanceEval Config.turretDistance x y
         + protectedByBlockEval model x y
-        + dontBlockHeroEval model x y
 
 
 protectedByBlockEval : Model -> Int -> Int -> Float
@@ -91,9 +97,12 @@ protectedByBlockEval model x y =
                     toFloat (abs y) / toFloat (abs x + abs y)
                 else
                     0
+
+            touchingBlock = isBlock ?? (Grid.get model (x - normalize x) y) ||
+                            isBlock ?? (Grid.get model x (y - normalize y))
         in
             if xProtected == 0 && yProtected == 0 then
-                0
+                if touchingBlock then Config.buildTurret else 0
             else if x /= 0 && y /= 0 && (xProtected == 0 || yProtected == 0) then
                 (xProtected + yProtected) * Config.buildHalfProtectedTurret
             else
@@ -104,16 +113,15 @@ blockEval : Model -> Int -> Int -> Float
 blockEval model x y =
     Config.buildBlock
         + (distanceEval Config.blockDistance x y)
-        * Config.blockDistanceMultiplier
+            * Config.blockDistanceMultiplier
         + protectTurretEval model x y
         + blockCreepEval model x y
-        + dontBlockHeroEval model x y
 
 
 protectTurretEval : Model -> Int -> Int -> Float
 protectTurretEval model x y =
     if x == 0 && y == 0 then
-        0
+        -Config.buildBlock
     else
         let
             xProtected =
@@ -129,19 +137,9 @@ protectTurretEval model x y =
                     0
         in
             if xProtected == 0 && yProtected == 0 then
-                0
+                -Config.buildBlock
             else
                 (xProtected + yProtected) * Config.protectTurret
-
-
-dontBlockHeroEval : Model -> Int -> Int -> Float
-dontBlockHeroEval model x y =
-    if not (heroCanMove model x y) then
-        -100
-    else if canWalkToCenter model x y then
-        Config.dontBlockHero
-    else
-        0
 
 
 heroCanMove : Model -> Int -> Int -> Bool
@@ -187,38 +185,6 @@ heroCanMove model x y =
 --            0
 
 
-canWalkToCenter : Model -> Int -> Int -> Bool
-canWalkToCenter model x y =
-    walkTo model x y 0 0 model.hero.x model.hero.y /= Nothing
-
-
-walkTo : Model -> Int -> Int -> Int -> Int -> Int -> Int -> Maybe ( Int, Int )
-walkTo model blockedX blockedY targetX targetY x y =
-    let
-        newX =
-            x + normalize (targetX - x)
-
-        newY =
-            y + normalize (targetY - y)
-
-        collideX =
-            (newX == blockedX && y == blockedY)
-                || (isStructure ?? Grid.get model newX y)
-
-        collideY =
-            (x == blockedX && newY == blockedY)
-                || (isStructure ?? Grid.get model x newY)
-    in
-        if x == targetX && y == targetY then
-            Just ( targetX, targetY )
-        else if newY /= y && not collideY then
-            walkTo model blockedX blockedY targetX targetY x newY
-        else if newX /= x && not collideX then
-            walkTo model blockedX blockedY targetX targetY newX y
-        else
-            Nothing
-
-
 blockCreepEval : Model -> Int -> Int -> Float
 blockCreepEval model x y =
     let
@@ -237,10 +203,11 @@ blockCreepEval model x y =
         y2 =
             max creepY model.hero.y
 
-        --distance = abs (creepX - model.hero.x) +
-        --           abs (creepY - model.hero.y)
+        buildDistance = distanceFrom model.hero x y
     in
-        if x >= x1 && x <= x2 && y >= y1 && y <= y2 then
+        if buildDistance > 3 then
+            0
+        else if x >= x1 && x <= x2 && y >= y1 && y <= y2 then
             Config.blockCreep
         else
             0
@@ -289,6 +256,7 @@ distanceEval ideal x y =
 heroEval : Model -> Int -> Int -> Float
 heroEval model x y =
     heroDistanceEval model x y
+        + dontBlockHeroEval model x y
 
 
 heroDistanceEval : Model -> Int -> Int -> Float
@@ -301,3 +269,45 @@ heroDistanceEval model x y =
                 - 1
     in
         toFloat -distance * Config.buildNearHero
+
+
+dontBlockHeroEval : Model -> Int -> Int -> Float
+dontBlockHeroEval model x y =
+    if not (heroCanMove model x y) then
+        -100
+    else if canWalkToCenter model x y then
+        Config.dontBlockHero
+    else
+        0
+
+
+canWalkToCenter : Model -> Int -> Int -> Bool
+canWalkToCenter model x y =
+    walkTo model x y 0 0 model.hero.x model.hero.y /= Nothing
+
+
+walkTo : Model -> Int -> Int -> Int -> Int -> Int -> Int -> Maybe ( Int, Int )
+walkTo model blockedX blockedY targetX targetY x y =
+    let
+        newX =
+            x + normalize (targetX - x)
+
+        newY =
+            y + normalize (targetY - y)
+
+        collideX =
+            (newX == blockedX && y == blockedY)
+                || (isStructure ?? Grid.get model newX y)
+
+        collideY =
+            (x == blockedX && newY == blockedY)
+                || (isStructure ?? Grid.get model x newY)
+    in
+        if x == targetX && y == targetY then
+            Just ( targetX, targetY )
+        else if newY /= y && not collideY then
+            walkTo model blockedX blockedY targetX targetY x newY
+        else if newX /= x && not collideX then
+            walkTo model blockedX blockedY targetX targetY newX y
+        else
+            Nothing

@@ -351,7 +351,7 @@ isNearBuildings : Model -> Int -> Int -> Bool
 isNearBuildings model x y =
     case closestEntity model.structures x y of
         Just ( distance, _ ) ->
-            distance < 3
+            distance <= 3
 
         Nothing ->
             False

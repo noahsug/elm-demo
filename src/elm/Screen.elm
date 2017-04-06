@@ -6,7 +6,7 @@ import Window
 
 scaleConstant : Float
 scaleConstant =
-    sqrt (toFloat Config.screenSurfaceArea)
+    toFloat Config.screenHeight
 
 
 type alias Model =
@@ -44,9 +44,7 @@ height model =
 
 scale : Model -> Float
 scale model =
-    sqrt
-        (toFloat model.actualHeight * toFloat model.actualWidth)
-        / scaleConstant
+    toFloat model.actualHeight / scaleConstant
 
 
 actualWidth : Model -> Int

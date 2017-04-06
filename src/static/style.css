@@ -2,4 +2,48 @@ html, body {
   height: 100%;
   margin: 0;
   user-select: none;
+  background-color: #3b7f93;
+}
+
+.overlay {
+  opacity: 1;
+  transition: opacity .25s ease-in-out;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  font-family: "Helvetica";
+  color: white;
+}
+
+.fade {
+  opacity: 0;
+}
+
+h1 {
+  text-align: center;
+  width: 100%;
+  position: absolute;
+  top: 42vh;
+  margin: 0;
+  font-weight: bold;
+  font-size: 5vh;
+}
+
+h3 {
+  text-align: center;
+  width: 100%;
+  position: absolute;
+  top: 62vh;
+  margin: 0;
+  font-weight: lighter;
+  font-size: 3vh;
+}
+
+.game-over h1 {
+  top: 17vh;
+}
+
+.game-over h3 {
+  top: 78vh;
 }

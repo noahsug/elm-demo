@@ -71,6 +71,15 @@ facing entity =
         ( entity.x + x, entity.y + y )
 
 
+forward : Int -> Entity -> ( Int, Int )
+forward amount entity =
+    let
+        ( x, y ) =
+            directionToXY entity.direction
+    in
+        ( entity.x + x * amount, entity.y + y * amount )
+
+
 distanceFromEntity : Entity -> Entity -> Int
 distanceFromEntity e1 e2 =
     abs (e1.x - e2.x) + abs (e1.y - e2.y)

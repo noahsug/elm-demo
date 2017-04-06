@@ -15,6 +15,9 @@ create structureType =
 
                 Turret ->
                     { health = 1, dmg = 1 }
+
+                AoeTurret ->
+                    { health = 1, dmg = 1 }
     in
         { createEntity
             | kind = Structure structureType

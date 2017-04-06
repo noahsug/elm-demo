@@ -1,6 +1,6 @@
 module Game.Ai.Config exposing (..)
 
-buildTurret = 0.5
+buildTurret = 1
 
 turretDistance = 2
 

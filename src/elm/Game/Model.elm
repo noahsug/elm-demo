@@ -13,6 +13,7 @@ type Action
     | Move
     | Build StructureType
     | Attack Entity
+    | AttackArea
     | KillHero
 
 
@@ -25,6 +26,7 @@ type EntityType
 type StructureType
     = Block
     | Turret
+    | AoeTurret
 
 
 type CreepType
