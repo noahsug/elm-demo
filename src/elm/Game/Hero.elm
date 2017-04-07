@@ -148,7 +148,7 @@ evalBuildPlanMovement depth plan model =
             Just move ->
                 let
                     choice =
-                        Choice Move move.direction
+                        Choice (Move 1) move.direction
 
                     next =
                         model
@@ -246,10 +246,10 @@ choices =
     , Choice (Build Block) Right
     , Choice (Build Block) Left
     , Choice (Build Block) Down
-    , Choice Move Up
-    , Choice Move Right
-    , Choice Move Left
-    , Choice Move Down
+    , Choice (Move 1) Up
+    , Choice (Move 1) Right
+    , Choice (Move 1) Left
+    , Choice (Move 1) Down
     ]
 
 
@@ -316,7 +316,7 @@ isValidChoice model { action, direction } =
     let
         needsEmptySquare =
             case action of
-                Move ->
+                Move _ ->
                     True
 
                 Build _ ->
@@ -334,10 +334,11 @@ isValidChoice model { action, direction } =
                     ( model.hero.x + dx, model.hero.y + dy )
 
                 usefulMovement =
-                    if action == Move then
-                        isNearBuildings model x y
-                    else
-                        True
+                    case action of
+                        Move _ ->
+                            isNearBuildings model x y
+                        _ ->
+                            True
             in
                 Grid.inBounds x y
                     && Grid.get model x y

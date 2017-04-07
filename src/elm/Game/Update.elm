@@ -1,27 +1,31 @@
 module Game.Update exposing (execute, resolve)
 
+import Config
 import Game.Structure as Structure
 import Game.Model exposing (..)
-import Game.Utils exposing (facing, nextPosition, distanceFromEntity)
+import Game.Utils exposing (facing, forward, nextPosition, distanceFromEntity)
 
 
 execute : Model -> Model
 execute model =
     let
-        aliveStructures =
+        structures =
             killEntities model.creeps model.structures
-
-        aliveCreeps =
-            killEntities model.structures model.creeps
-
-        hero =
-            move model.hero
+                |> List.map tickAge
 
         creeps =
-            List.map move aliveCreeps
+            killEntities model.structures model.creeps
+                |> List.map move
+                |> List.map tickAge
+
+        hero =
+            model.hero
+                |> move
+                |> tickAge
 
         spawnedStructures =
             spawnStructures creeps model.hero
+                |> List.map tickAge
 
         gameOver =
             model.gameOver || isGameOver creeps hero
@@ -29,9 +33,14 @@ execute model =
         { model
             | hero = hero
             , creeps = creeps
-            , structures = aliveStructures ++ spawnedStructures
+            , structures = structures ++ spawnedStructures
             , gameOver = gameOver
         }
+
+
+tickAge : Entity -> Entity
+tickAge entity =
+    { entity | age = entity.age + 1 }
 
 
 killEntities : List Entity -> List Entity -> List Entity
@@ -60,7 +69,6 @@ isAttackingEntity target entity =
             False
 
 
-
 spawnStructures : List Entity -> Entity -> List Entity
 spawnStructures creeps hero =
     let
@@ -86,16 +94,16 @@ spawnStructures creeps hero =
 
 move : Entity -> Entity
 move entity =
-    let
-        ( x, y ) =
-            facing entity
-    in
-        case entity.action of
-            Move ->
+    case entity.action of
+        Move amount ->
+            let
+                ( x, y ) =
+                    forward amount entity
+            in
                 { entity | x = x, y = y, px = entity.x, py = entity.y }
 
-            _ ->
-                entity
+        _ ->
+            entity
 
 
 isGameOver : List Entity -> Entity -> Bool

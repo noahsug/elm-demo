@@ -30,6 +30,17 @@ ticksUntilGameOver =
     100
 
 
+dashDistance : Int
+dashDistance =
+    3
+
+dashDuration : Int
+dashDuration =
+    3
+
+
+-- Not Used
+
 creepReadyRate : Int
 creepReadyRate =
     0
@@ -37,4 +48,4 @@ creepReadyRate =
 
 startingCreeps : Int
 startingCreeps =
-    3
+    0

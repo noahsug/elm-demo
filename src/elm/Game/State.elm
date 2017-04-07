@@ -1,6 +1,5 @@
 module Game.State exposing (init, update, spawnCreep)
 
-import Config
 import Game.Utils exposing (numSpawnableCreeps)
 import Game.Creep as Creep
 import Game.Hero as Hero

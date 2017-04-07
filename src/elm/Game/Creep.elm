@@ -1,17 +1,22 @@
 module Game.Creep exposing (create, makeChoice)
 
+import Config
+import Game.Grid as Grid
 import Game.Model exposing (..)
 import Game.Movement exposing (..)
 import Game.Utils
     exposing
         ( xyToDirection
-        , facing
+        , nextPosition
+        , distanceFrom
+        , forward
         , position
         , isStructure
         , isTurret
         , createEntity
         )
 import Maybe.Extra
+import Utils exposing (normalize)
 
 
 create : CreepType -> Entity
@@ -52,28 +57,22 @@ makeChoice model creep =
             { creep | action = KillHero, direction = xyToDirection dx dy }
         else if distance == 2 && canKillHeroWithoutMoving model creep then
             { creep | action = NoAction }
-        else if abs dx == abs dy then
-            doDiagonalMovement model creep
+        else if isDashing creep then
+            doDashMovement model creep
         else
-            doNormalMovement model creep
+            doMoveAction model creep
 
 
 canKillHeroWithoutMoving : Model -> Entity -> Bool
 canKillHeroWithoutMoving model creep =
     case model.hero.action of
-        Move ->
+        Move amount ->
             let
                 ( nextHeroX, nextHeroY ) =
-                    facing model.hero
-
-                dx =
-                    nextHeroX - creep.x
-
-                dy =
-                    nextHeroY - creep.y
+                    forward amount model.hero
 
                 distance =
-                    abs dx + abs dy
+                    distanceFrom creep nextHeroX nextHeroY
             in
                 if distance == 1 then
                     True
@@ -82,6 +81,80 @@ canKillHeroWithoutMoving model creep =
 
         _ ->
             False
+
+
+isDashing : Entity -> Bool
+isDashing entity =
+    case entity.kind of
+        Creep Dmg ->
+            entity.age < Config.dashDuration
+
+        _ ->
+            False
+
+
+
+-- Dash in single direction.
+
+
+doDashMovement : Model -> Entity -> Entity
+doDashMovement model creep =
+    let
+        dx =
+            model.hero.x - creep.x
+
+        dy =
+            model.hero.y - creep.y
+    in
+        if
+            abs dx
+                > abs dy
+                && abs dx
+                > Config.dashDistance
+                && canDash model dx 0 creep
+        then
+            { creep
+                | action = Move Config.dashDistance
+                , direction = xyToDirection dx 0
+            }
+        else if abs dy > Config.dashDistance && canDash model 0 dy creep then
+            { creep
+                | action = Move Config.dashDistance
+                , direction = xyToDirection 0 dy
+            }
+        else
+            doMoveAction model creep
+
+
+canDash : Model -> Int -> Int -> Entity -> Bool
+canDash model dx dy entity =
+    List.all
+        (\i ->
+            let
+                x =
+                    entity.x + normalize dx * i
+
+                y =
+                    entity.y + normalize dy * i
+            in
+                Grid.get model x y == Nothing
+        )
+        (List.range 1 Config.dashDistance)
+
+
+doMoveAction : Model -> Entity -> Entity
+doMoveAction model creep =
+    let
+        dx =
+            model.hero.x - creep.x
+
+        dy =
+            model.hero.y - creep.y
+    in
+        if abs dx == abs dy then
+            doDiagonalMovement model creep
+        else
+            doNormalMovement model creep
 
 
 
@@ -237,6 +310,6 @@ doMovement move creep =
                             NoAction
 
                 Nothing ->
-                    Move
+                    Move 1
     in
         { creep | action = action, direction = move.direction }

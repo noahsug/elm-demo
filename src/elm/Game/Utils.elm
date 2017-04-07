@@ -16,6 +16,7 @@ createEntity =
     , kind = Hero
     , health = 1
     , dmg = 0
+    , age = 0
     }
 
 
@@ -103,8 +104,8 @@ position entity =
 nextPosition : Entity -> ( Int, Int )
 nextPosition entity =
     case entity.action of
-        Move ->
-            facing entity
+        Move amount ->
+            forward amount entity
 
         _ ->
             position entity

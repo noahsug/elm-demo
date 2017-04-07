@@ -10,7 +10,7 @@ type Direction
 
 type Action
     = NoAction
-    | Move
+    | Move Int
     | Build StructureType
     | Attack Entity
     | AttackArea
@@ -44,6 +44,7 @@ type alias Entity =
     , kind : EntityType
     , health : Int
     , dmg : Int
+    , age : Int
     }
 
 

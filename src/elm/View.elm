@@ -33,6 +33,7 @@ import Text
 -- 25% Pink: 246 185 170
 -- Dark Pink: 231 144 127
 
+
 heroRadiusColor =
     Color.rgb 2 186 191
 
@@ -103,7 +104,7 @@ drawTextOverlay model =
             div
                 [ class "overlay" ]
                 [ h1 [] [ text "Kill the Square" ]
-                , h3 [] [ text "click to spawn circles" ]
+                , h3 [] [ text "click to start" ]
                 ]
 
         Playing ->
@@ -140,6 +141,7 @@ maybeDrawCreepLine model =
     case model.state of
         Playing ->
             drawCreepLine model
+
         _ ->
             []
 
@@ -150,17 +152,24 @@ drawCreepLine model =
         |> List.indexedMap
             (\i creep ->
                 let
-                    canSpawn =
-                        i < numSpawnableCreeps model.game
-
                     scale =
-                        if canSpawn then
-                            1
+                        if i == 0 then
+                            2
+                        else if i == 1 then
+                            1.5
                         else
-                            0.7
+                            1
+
+                    xPadding =
+                        if i == 0 then
+                            0
+                        else if i == 1 then
+                            0.5
+                        else
+                            0.65
 
                     x =
-                        Screen.toActual model.screen gridSize * toFloat i
+                        Screen.toActual model.screen gridSize * (toFloat i + xPadding)
 
                     y =
                         Screen.toActual model.screen gridSize
@@ -332,8 +341,10 @@ entityX model entity =
 
         x =
             case entity.action of
-                Move ->
-                    linearInterpolation model (toFloat dx) (toFloat entity.x)
+                Move amount ->
+                    linearInterpolation model
+                        (toFloat <| dx * amount)
+                        (toFloat entity.x)
 
                 _ ->
                     toFloat entity.x
@@ -349,8 +360,10 @@ entityY model entity =
 
         y =
             case entity.action of
-                Move ->
-                    linearInterpolation model (toFloat dy) (toFloat entity.y)
+                Move amount ->
+                    linearInterpolation model
+                        (toFloat <| dy * amount)
+                        (toFloat entity.y)
 
                 _ ->
                     toFloat entity.y
