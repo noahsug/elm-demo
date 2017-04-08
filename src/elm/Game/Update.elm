@@ -1,4 +1,4 @@
-module Game.Update exposing (execute, resolve)
+module Game.Update exposing (execute, resolve, attackerDmg)
 
 import Config
 import Game.Structure as Structure

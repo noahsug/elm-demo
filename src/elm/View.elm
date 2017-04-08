@@ -13,6 +13,7 @@ import Game.Model
         , Action(..)
         )
 import Game.Utils exposing (directionToXY, numSpawnableCreeps)
+import Game.Update
 import Html exposing (div, h1, h3, text)
 import Html.Attributes exposing (class)
 import Input
@@ -20,6 +21,7 @@ import Model exposing (..)
 import Msg exposing (..)
 import Screen
 import Text
+import Animation
 
 
 -- Dark Bg: 0 168 169
@@ -116,9 +118,7 @@ drawTextOverlay model =
 drawBackground : Model -> List Collage.Form
 drawBackground model =
     [ Collage.circle
-        (Screen.toActual model.screen
-            (gridSize * (toFloat heroRadius))
-        )
+        (gridToActual model (toFloat heroRadius))
         |> Collage.filled heroRadiusColor
     ]
 
@@ -169,11 +169,10 @@ drawCreepLine model =
                             0.65
 
                     x =
-                        Screen.toActual model.screen gridSize * (toFloat i + xPadding)
+                        gridToActual model (toFloat i + xPadding)
 
                     y =
-                        Screen.toActual model.screen gridSize
-                            * toFloat (Config.heroRadius + 1)
+                        gridToActual model (toFloat Config.heroRadius + 1)
                 in
                     creepForm model creep scale
                         |> Collage.move ( x, y )
@@ -222,20 +221,31 @@ drawEntity model entity =
 
 drawHero : Model -> Collage.Form
 drawHero model =
-    Collage.ngon 4
-        (Screen.toActual model.screen
-            (gridSize / 3)
-        )
-        |> Collage.filled Color.white
-        |> Collage.rotate (degrees 45)
-        |> Collage.move
-            ( entityX model model.game.hero, entityY model model.game.hero )
+    let
+        ( offsetX, offsetY ) =
+            animateBuild model model.game.hero
+    in
+        Collage.ngon 4
+            (gridToActual model (1 / 3))
+            |> Collage.filled Color.white
+            |> Collage.rotate (degrees 45)
+            |> Collage.move
+                ( entityX model model.game.hero + offsetX
+                , entityY model model.game.hero + offsetY
+                )
 
 
 drawCreep : Model -> Entity -> CreepType -> Collage.Form
 drawCreep model creep kind =
-    creepForm model creep 1
-        |> Collage.move ( entityX model creep, entityY model creep )
+    let
+        ( xOffset, yOffset ) =
+            animateAttack model creep
+    in
+        creepForm model creep 1
+            |> Collage.move
+                ( entityX model creep + xOffset
+                , entityY model creep + yOffset
+                )
 
 
 creepForm : Model -> Entity -> Float -> Collage.Form
@@ -249,7 +259,7 @@ creepForm model creep scale =
                 _ ->
                     Tank
 
-        color =
+        baseColor =
             case kind of
                 Tank ->
                     tankColor
@@ -259,9 +269,15 @@ creepForm model creep scale =
 
         shape =
             Collage.circle
-                (Screen.toActual model.screen
-                    (scale * gridSize / 3)
-                )
+                (gridToActual model (scale / 3))
+
+        color =
+            (animateDmg
+                baseColor
+                model
+                model.game.structures
+                creep
+            )
     in
         --[ shape
         --    |> Collage.filled color
@@ -276,10 +292,14 @@ creepForm model creep scale =
 drawBlock : Model -> Entity -> Collage.Form
 drawBlock model structure =
     Collage.ngon 4
-        (Screen.toActual model.screen
-            (1.4 * gridSize / 2)
-        )
-        |> Collage.filled blockColor
+        (gridToActual model 0.7)
+        |> Collage.filled
+            (animateDmg
+                blockColor
+                model
+                model.game.creeps
+                structure
+            )
         |> Collage.rotate (degrees 45)
         |> Collage.move
             ( entityX model structure, entityY model structure )
@@ -288,49 +308,19 @@ drawBlock model structure =
 drawTurret : Model -> Entity -> Collage.Form
 drawTurret model structure =
     let
-        { red, green, blue } =
-            Color.toRgb turretColor
-
-        animatedRed =
-            case structure.action of
-                Attack _ ->
-                    red
-                        |> toFloat
-                        |> stepInterpolation model -100 0.8 1
-                        |> round
-
-                _ ->
-                    red
+        color =
+            animateTurretShot model structure
     in
         Collage.ngon 4
-            (Screen.toActual model.screen gridSize / 2)
-            |> Collage.filled (Color.rgb animatedRed green blue)
+            (gridToActual model 0.5)
+            |> Collage.filled color
             |> Collage.move
                 ( entityX model structure, entityY model structure )
 
 
 drawAoeTurret : Model -> Entity -> Collage.Form
 drawAoeTurret model structure =
-    let
-        baseColor =
-            147
-
-        primaryColor =
-            case structure.action of
-                Attack _ ->
-                    baseColor
-                        |> stepInterpolation model 100 0.8 1
-                        |> round
-
-                _ ->
-                    baseColor
-    in
-        Collage.ngon 5
-            (Screen.toActual model.screen gridSize / 2)
-            |> Collage.filled (Color.rgb primaryColor primaryColor 90)
-            |> Collage.rotate (degrees 90)
-            |> Collage.move
-                ( entityX model structure, entityY model structure )
+    drawTurret model structure
 
 
 entityX : Model -> Entity -> Float
@@ -340,14 +330,13 @@ entityX model entity =
             Tuple.first (directionToXY entity.direction)
 
         x =
-            case entity.action of
-                Move amount ->
-                    linearInterpolation model
-                        (toFloat <| dx * amount)
-                        (toFloat entity.x)
+            toFloat entity.x
+                + case entity.action of
+                    Move amount ->
+                        animateLinear (toFloat <| dx * amount) model
 
-                _ ->
-                    toFloat entity.x
+                    _ ->
+                        0
     in
         gridToActual model x
 
@@ -359,55 +348,15 @@ entityY model entity =
             Tuple.second (directionToXY entity.direction)
 
         y =
-            case entity.action of
-                Move amount ->
-                    linearInterpolation model
-                        (toFloat <| dy * amount)
-                        (toFloat entity.y)
+            toFloat entity.y
+                + case entity.action of
+                    Move amount ->
+                        animateLinear (toFloat <| dy * amount) model
 
-                _ ->
-                    toFloat entity.y
+                    _ ->
+                        0
     in
         gridToActual model y
-
-
-linearInterpolation : Model -> Float -> Float -> Float
-linearInterpolation model amount value =
-    value + amount * (1 - model.timeUntilGameUpdate / Config.gameUpdateTime)
-
-
-
--- curvedInterpolation : Model -> Float -> Float -> Float
--- curvedInterpolation model amount value =
---     let
---         ratio =
---             1 - model.timeUntilGameUpdate / Config.gameUpdateTime
---
---         a =
---             0
---
---         b =
---             0.2
---     in
---         value
---             + amount
---             * if ratio > a && ratio < b then
---                 sin ((ratio - a) * (1 / b))
---               else
---                 0
---
-
-
-stepInterpolation : Model -> Float -> Float -> Float -> Float -> Float
-stepInterpolation model amount start end value =
-    let
-        time =
-            1 - model.timeUntilGameUpdate / Config.gameUpdateTime
-    in
-        if time > start && time < end then
-            value + amount
-        else
-            value
 
 
 gridToActual : Model -> Float -> Float
@@ -415,3 +364,132 @@ gridToActual model gridValue =
     gridValue
         |> (*) gridSize
         |> Screen.toActual model.screen
+
+
+animateLinear : Float -> Model -> Float
+animateLinear amount model =
+    animate (Animation.linear amount) model
+
+
+animateTurretShot : Model -> Entity -> Color.Color
+animateTurretShot model entity =
+    case entity.action of
+        Attack _ ->
+            let
+                { red, green, blue } =
+                    Color.toRgb turretColor
+
+                ratio =
+                    animate (Animation.step 0.8 1 0.8) model
+            in
+                Color.rgb
+                    (brightenValue ratio red)
+                    (brightenValue ratio green)
+                    (brightenValue ratio blue)
+
+        _ ->
+            turretColor
+
+
+brightenValue : Float -> Int -> Int
+brightenValue ratio color =
+    let
+        value =
+            toFloat color
+    in
+        round <| value + (255 - value) * ratio
+
+
+animateBuild : Model -> Entity -> ( Float, Float )
+animateBuild model entity =
+    case entity.action of
+        Build _ ->
+            let
+                amount =
+                    gridToActual model 0.2
+
+                animation =
+                    animate
+                        (Animation.combine
+                            0.5
+                            (Animation.linear 0)
+                            (Animation.inAndOut
+                                0.5
+                                Animation.linear
+                                amount
+                            )
+                        )
+                        model
+
+                ( dx, dy ) =
+                    directionToXY entity.direction
+            in
+                ( toFloat dx * animation, toFloat dy * animation )
+
+        _ ->
+            ( 0, 0 )
+
+
+animateAttack : Model -> Entity -> ( Float, Float )
+animateAttack model entity =
+    --case entity.action of
+    --    Attack _ ->
+    --        let
+    --            amount =
+    --                gridToActual model 0.3
+    --
+    --            animation =
+    --                animate
+    --                    (Animation.combine
+    --                        0.25
+    --                        (Animation.linear 0)
+    --                        (Animation.combine
+    --                            0.5
+    --                            (Animation.easeIn amount)
+    --                            (Animation.easeOut -amount)
+    --                        )
+    --                    )
+    --                    model
+    --
+    --            ( dx, dy ) =
+    --                directionToXY entity.direction
+    --        in
+    --            ( toFloat dx * animation, toFloat dy * animation )
+    --
+    --    _ ->
+    --        ( 0, 0 )
+    ( 0, 0 )
+
+
+animateDmg : Color.Color -> Model -> List Entity -> Entity -> Color.Color
+animateDmg color model attackers entity =
+    let
+        maxHealth =
+            case entity.kind of
+                Structure Block ->
+                    3
+
+                Creep Tank ->
+                    4
+
+                Creep Dmg ->
+                    2
+
+                _ ->
+                    0
+
+        dmg =
+            (maxHealth - toFloat entity.health) / maxHealth
+
+        { red, green, blue } =
+            Color.toRgb color
+
+        alpha =
+            1 - (1 / maxHealth) * dmg
+    in
+        Color.rgba red green blue alpha
+
+
+animate : (Float -> Float) -> Model -> Float
+animate animation model =
+    animation (1 - model.timeUntilGameUpdate / Config.gameUpdateTime)
