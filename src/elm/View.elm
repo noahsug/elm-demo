@@ -272,10 +272,9 @@ creepForm model creep scale =
                 (gridToActual model (scale / 3))
 
         color =
-            (animateDmg
+            (animateCreepDmg
                 baseColor
                 model
-                model.game.structures
                 creep
             )
     in
@@ -294,10 +293,9 @@ drawBlock model structure =
     Collage.ngon 4
         (gridToActual model 0.7)
         |> Collage.filled
-            (animateDmg
+            (animateStructureDmg
                 blockColor
                 model
-                model.game.creeps
                 structure
             )
         |> Collage.rotate (degrees 45)
@@ -391,15 +389,6 @@ animateTurretShot model entity =
             turretColor
 
 
-brightenValue : Float -> Int -> Int
-brightenValue ratio color =
-    let
-        value =
-            toFloat color
-    in
-        round <| value + (255 - value) * ratio
-
-
 animateBuild : Model -> Entity -> ( Float, Float )
 animateBuild model entity =
     case entity.action of
@@ -461,19 +450,13 @@ animateAttack model entity =
     ( 0, 0 )
 
 
-animateDmg : Color.Color -> Model -> List Entity -> Entity -> Color.Color
-animateDmg color model attackers entity =
+animateStructureDmg : Color.Color -> Model -> Entity -> Color.Color
+animateStructureDmg color model entity =
     let
         maxHealth =
             case entity.kind of
                 Structure Block ->
                     3
-
-                Creep Tank ->
-                    4
-
-                Creep Dmg ->
-                    2
 
                 _ ->
                     0
@@ -490,6 +473,46 @@ animateDmg color model attackers entity =
         Color.rgba red green blue alpha
 
 
+animateCreepDmg : Color.Color -> Model -> Entity -> Color.Color
+animateCreepDmg color model entity =
+    let
+        maxHealth =
+            case entity.kind of
+                Creep Tank ->
+                    4
+
+                Creep Dmg ->
+                    2
+
+                _ ->
+                    0
+
+        ratio =
+            0.8 * (1 - (toFloat entity.health) / maxHealth)
+
+        { red, green, blue } =
+            Color.toRgb color
+    in
+        Color.rgb
+            (brightenValue ratio red)
+            (darkenValue ratio green)
+            (darkenValue ratio blue)
+
+
 animate : (Float -> Float) -> Model -> Float
 animate animation model =
     animation (1 - model.timeUntilGameUpdate / Config.gameUpdateTime)
+
+
+brightenValue : Float -> Int -> Int
+brightenValue ratio color =
+    let
+        value =
+            toFloat color
+    in
+        round <| value + (255 - value) * ratio
+
+
+darkenValue : Float -> Int -> Int
+darkenValue ratio color =
+    brightenValue -ratio color
