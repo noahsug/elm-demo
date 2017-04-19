@@ -14,7 +14,28 @@ init =
     , creeps = []
     , structures = []
     , creepLine =
-        [ Creep.create Tank
+        [ Creep.create Bomb
+        , Creep.create Bomb
+        , Creep.create Bomb
+        , Creep.create Bomb
+        , Creep.create Line
+        , Creep.create Tank
+        , Creep.create Tank
+        , Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Tank
+        , Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Tank
+        , Creep.create Tank
         , Creep.create Dmg
         , Creep.create Tank
         , Creep.create Dmg

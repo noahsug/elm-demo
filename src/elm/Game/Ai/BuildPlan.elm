@@ -203,7 +203,7 @@ blockCreepEval model x y =
         y2 =
             max creepY model.hero.y
 
-        buildDistance = distanceFrom model.hero x y
+        buildDistance = distanceFrom x y model.hero
     in
         if buildDistance > 3 then
             0

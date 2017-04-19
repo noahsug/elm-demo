@@ -1,22 +1,51 @@
 module Game.Update exposing (execute, resolve, attackerDmg)
 
 import Config
-import Game.Structure as Structure
 import Game.Model exposing (..)
-import Game.Utils exposing (facing, forward, nextPosition, distanceFromEntity)
+import Game.Structure as Structure
+import Game.Utils
+    exposing
+        ( facing
+        , canExplode
+        , forward
+        , position
+        , nextPosition
+        , distanceFromEntity
+        , isDead
+        , isAlive
+        )
+import Game.Grid as Grid
+import Utils exposing (normalize)
 
 
 execute : Model -> Model
 execute model =
     let
+        dmgedCreeps =
+            model.creeps
+                |> List.map (takeDmg model.structures)
+                |> List.map maybeExplode
+
+        explosions =
+            dmgedCreeps
+                |> List.filter canExplode
+                |> List.filter isDead
+                |> List.map position
+
         structures =
-            killEntities model.creeps model.structures
+            model.structures
+                |> List.map (takeDmg model.creeps)
+                |> List.map (takeExplosionDmg explosions)
+                |> List.filter isAlive
                 |> List.map tickAge
 
         creeps =
-            killEntities model.structures model.creeps
+            dmgedCreeps
+                |> List.map (takeExplosionDmg explosions)
+                |> List.filter isAlive
                 |> List.map move
                 |> List.map tickAge
+                |> List.filter isMostlyInBounds
 
         hero =
             model.hero
@@ -28,7 +57,9 @@ execute model =
                 |> List.map tickAge
 
         gameOver =
-            model.gameOver || isGameOver creeps hero
+            model.gameOver
+                || isGameOver creeps hero
+                || (explosionDmg explosions model.hero > 0)
     in
         { model
             | hero = hero
@@ -38,18 +69,36 @@ execute model =
         }
 
 
+maybeExplode : Entity -> Entity
+maybeExplode entity =
+    case entity.action of
+        Explode ->
+            { entity | health = 0 }
+
+        _ ->
+            entity
+
+
 tickAge : Entity -> Entity
 tickAge entity =
     { entity | age = entity.age + 1 }
 
 
-killEntities : List Entity -> List Entity -> List Entity
-killEntities attackers entities =
-    entities
-        |> List.map
-            (\e -> { e | health = e.health - (attackerDmg attackers e) })
-        |> List.filter
-            (\e -> e.health > 0)
+isMostlyInBounds : Entity -> Bool
+isMostlyInBounds entity =
+    let
+        x =
+            entity.x - normalize entity.x
+
+        y =
+            entity.y - normalize entity.y
+    in
+        Grid.inBounds x y
+
+
+takeDmg : List Entity -> Entity -> Entity
+takeDmg attackers entity =
+    { entity | health = entity.health - (attackerDmg attackers entity) }
 
 
 attackerDmg : List Entity -> Entity -> Int
@@ -67,6 +116,21 @@ isAttackingEntity target entity =
 
         _ ->
             False
+
+
+takeExplosionDmg : List ( Int, Int ) -> Entity -> Entity
+takeExplosionDmg explosions entity =
+    { entity | health = entity.health - (explosionDmg explosions entity) }
+
+
+explosionDmg : List ( Int, Int ) -> Entity -> Int
+explosionDmg explosions target =
+    explosions
+        |> List.filter
+            (\( x, y ) ->
+                abs (x - target.x) <= 1 && abs (y - target.y) <= 1
+            )
+        |> List.foldl (\entity totalDmg -> 3 + totalDmg) 0
 
 
 spawnStructures : List Entity -> Entity -> List Entity

@@ -7,8 +7,11 @@ import Game.Movement exposing (..)
 import Game.Utils
     exposing
         ( xyToDirection
+        , canExplode
+        , directionToXY
         , nextPosition
         , distanceFrom
+        , directionToEntity
         , forward
         , position
         , isStructure
@@ -25,13 +28,43 @@ create kind =
         { health, dmg } =
             case kind of
                 Tank ->
-                    { health = 4
+                    { health = 6
                     , dmg = 1
                     }
 
                 Dmg ->
-                    { health = 2
+                    { health = 1
                     , dmg = 6
+                    }
+
+                Line ->
+                    { health = 9
+                    , dmg = 3
+                    }
+
+                Stealth ->
+                    { health = 2
+                    , dmg = 2
+                    }
+
+                Bomb ->
+                    { health = 1
+                    , dmg = 6
+                    }
+
+                Flying ->
+                    { health = 2
+                    , dmg = 1
+                    }
+
+                Shield ->
+                    { health = 2
+                    , dmg = 1
+                    }
+
+                _ ->
+                    { health = 2
+                    , dmg = 1
                     }
     in
         { createEntity
@@ -59,6 +92,8 @@ makeChoice model creep =
             { creep | action = NoAction }
         else if isDashing creep then
             doDashMovement model creep
+        else if isLineCreep creep then
+            doLineMovement model creep
         else
             doMoveAction model creep
 
@@ -72,7 +107,7 @@ canKillHeroWithoutMoving model creep =
                     forward amount model.hero
 
                 distance =
-                    distanceFrom creep nextHeroX nextHeroY
+                    distanceFrom nextHeroX nextHeroY creep
             in
                 if distance == 1 then
                     True
@@ -140,6 +175,36 @@ canDash model dx dy entity =
                 Grid.get model x y == Nothing
         )
         (List.range 1 Config.dashDistance)
+
+
+isLineCreep : Entity -> Bool
+isLineCreep creep =
+    case creep.kind of
+        Creep Line ->
+            True
+        _ ->
+            False
+
+
+doLineMovement : Model -> Entity -> Entity
+doLineMovement model creep =
+    let
+        direction =
+            if creep.age == 1 then
+                directionToEntity model.hero creep
+            else
+                creep.direction
+
+        (dx, dy) =
+            directionToXY direction
+
+        movement =
+            if dx == 0 then
+                yMovement model creep dy
+            else
+                xMovement model creep dx
+    in
+        doMovement movement creep
 
 
 doMoveAction : Model -> Entity -> Entity
@@ -301,10 +366,16 @@ doMovement move creep =
                 Just entity ->
                     case entity.kind of
                         Structure _ ->
-                            Attack entity
+                            if canExplode creep then
+                                Explode
+                            else
+                                Attack entity
 
                         Hero ->
-                            KillHero
+                            if canExplode creep then
+                                Explode
+                            else
+                                KillHero
 
                         Creep _ ->
                             NoAction

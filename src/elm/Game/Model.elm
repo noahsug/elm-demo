@@ -14,6 +14,7 @@ type Action
     | Build StructureType
     | Attack Entity
     | AttackArea
+    | Explode
     | KillHero
 
 
@@ -32,6 +33,12 @@ type StructureType
 type CreepType
     = Tank
     | Dmg
+    | Stealth
+    | Bomb
+    | Flying
+    | Shield
+    | Slug
+    | Line
 
 
 type alias Entity =

@@ -1,7 +1,6 @@
 module Game.Utils exposing (..)
 
 import Config
-import Utils exposing ((??))
 import Game.Model exposing (..)
 
 
@@ -91,8 +90,8 @@ distanceFromCenter entity =
     (abs entity.x) + (abs entity.y)
 
 
-distanceFrom : Entity -> Int -> Int -> Int
-distanceFrom entity x y =
+distanceFrom : Int -> Int -> Entity -> Int
+distanceFrom x y entity =
     abs (entity.x - x) + abs (entity.y - y)
 
 
@@ -143,15 +142,15 @@ isBlock entity =
 
 numSpawnableCreeps : Model -> Int
 numSpawnableCreeps model =
-    --let
-    --    ready =
-    --        model.ticks
-    --            // Config.creepReadyRate
-    --            - model.creepsSpawned
-    --            + Config.startingCreeps
-    --in
-    --    min ready (List.length model.creepLine)
-    List.length model.creepLine
+    --List.length model.creepLine
+    let
+        ready =
+            model.ticks
+                // Config.creepReadyRate
+                - model.creepsSpawned
+                + Config.startingCreeps
+    in
+        min ready (List.length model.creepLine)
 
 
 closestEntity : List Entity -> Int -> Int -> Maybe ( Int, Entity )
@@ -160,7 +159,7 @@ closestEntity entities x y =
         (\entity maybeClosest ->
             let
                 distance =
-                    distanceFrom entity x y
+                    distanceFrom x y entity
             in
                 case maybeClosest of
                     Just ( closestDistance, _ ) ->
@@ -174,3 +173,21 @@ closestEntity entities x y =
         )
         Nothing
         entities
+
+
+canExplode : Entity -> Bool
+canExplode entity =
+    case entity.kind of
+        Creep Bomb ->
+            True
+        _ ->
+            False
+
+isDead : Entity -> Bool
+isDead entity =
+    entity.health <= 0
+
+
+isAlive : Entity -> Bool
+isAlive entity =
+    entity.health > 0

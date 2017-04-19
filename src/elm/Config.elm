@@ -43,9 +43,9 @@ dashDuration =
 
 creepReadyRate : Int
 creepReadyRate =
-    0
+    3
 
 
 startingCreeps : Int
 startingCreeps =
-    0
+    1

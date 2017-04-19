@@ -1,8 +1,10 @@
 module View exposing (view)
 
+import Animation
 import Collage
 import Color
 import Config exposing (gridSize, heroRadius, ticksUntilGameOver)
+import Game.Creep as Creep
 import Element
 import Game.Model
     exposing
@@ -12,8 +14,8 @@ import Game.Model
         , CreepType(..)
         , Action(..)
         )
-import Game.Utils exposing (directionToXY, numSpawnableCreeps)
 import Game.Update
+import Game.Utils exposing (directionToXY, numSpawnableCreeps)
 import Html exposing (div, h1, h3, text)
 import Html.Attributes exposing (class)
 import Input
@@ -21,7 +23,6 @@ import Model exposing (..)
 import Msg exposing (..)
 import Screen
 import Text
-import Animation
 
 
 -- Dark Bg: 0 168 169
@@ -36,24 +37,39 @@ import Animation
 -- Dark Pink: 231 144 127
 
 
+heroRadiusColor : Color.Color
 heroRadiusColor =
     Color.rgb 2 186 191
 
 
+turretColor : Color.Color
 turretColor =
     Color.rgb 191 238 239
 
 
+blockColor : Color.Color
 blockColor =
     Color.rgb 128 220 223
 
 
+dmgColor : Color.Color
 dmgColor =
     Color.rgb 246 185 170
 
 
+tankColor : Color.Color
 tankColor =
     Color.rgb 239 203 88
+
+
+lineColor : Color.Color
+lineColor =
+    Color.rgb 88 203 239
+
+
+bombColor : Color.Color
+bombColor =
+    Color.rgb 239 88 203
 
 
 outlineStyle =
@@ -149,6 +165,7 @@ maybeDrawCreepLine model =
 drawCreepLine : Model -> List Collage.Form
 drawCreepLine model =
     model.game.creepLine
+        |> List.take (numSpawnableCreeps model.game)
         |> List.indexedMap
             (\i creep ->
                 let
@@ -251,21 +268,22 @@ drawCreep model creep kind =
 creepForm : Model -> Entity -> Float -> Collage.Form
 creepForm model creep scale =
     let
-        kind =
-            case creep.kind of
-                Creep kind ->
-                    kind
-
-                _ ->
-                    Tank
-
         baseColor =
-            case kind of
-                Tank ->
+            case creep.kind of
+                Creep Tank ->
                     tankColor
 
-                Dmg ->
+                Creep Dmg ->
                     dmgColor
+
+                Creep Line ->
+                    lineColor
+
+                Creep Bomb ->
+                    bombColor
+
+                _ ->
+                    Color.black
 
         shape =
             Collage.circle
@@ -478,17 +496,14 @@ animateCreepDmg color model entity =
     let
         maxHealth =
             case entity.kind of
-                Creep Tank ->
-                    4
-
-                Creep Dmg ->
-                    2
+                Creep kind ->
+                    (Creep.create kind).health
 
                 _ ->
                     0
 
         ratio =
-            0.8 * (1 - (toFloat entity.health) / maxHealth)
+            0.8 * (1 - toFloat entity.health / toFloat maxHealth)
 
         { red, green, blue } =
             Color.toRgb color
