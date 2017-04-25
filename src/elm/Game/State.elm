@@ -53,8 +53,7 @@ update : Model -> Model
 update model =
     model
         --|> spawnCreeps
-        |>
-            Update.execute
+        |> Update.execute
         |> makeHeroChoice
         |> makeCreepChoices
         |> makeStructureChoices

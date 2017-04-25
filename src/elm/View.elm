@@ -439,33 +439,32 @@ animateBuild model entity =
 
 animateAttack : Model -> Entity -> ( Float, Float )
 animateAttack model entity =
-    --case entity.action of
-    --    Attack _ ->
-    --        let
-    --            amount =
-    --                gridToActual model 0.3
-    --
-    --            animation =
-    --                animate
-    --                    (Animation.combine
-    --                        0.25
-    --                        (Animation.linear 0)
-    --                        (Animation.combine
-    --                            0.5
-    --                            (Animation.easeIn amount)
-    --                            (Animation.easeOut -amount)
-    --                        )
-    --                    )
-    --                    model
-    --
-    --            ( dx, dy ) =
-    --                directionToXY entity.direction
-    --        in
-    --            ( toFloat dx * animation, toFloat dy * animation )
-    --
-    --    _ ->
-    --        ( 0, 0 )
-    ( 0, 0 )
+    case entity.action of
+        Attack _ ->
+            let
+                amount =
+                    gridToActual model 0.3
+
+                animation =
+                    animate
+                        (Animation.combine
+                            0.25
+                            (Animation.linear 0)
+                            (Animation.combine
+                                0.5
+                                (Animation.easeIn amount)
+                                (Animation.easeOut -amount)
+                            )
+                        )
+                        model
+
+                ( dx, dy ) =
+                    directionToXY entity.direction
+            in
+                ( toFloat dx * animation, toFloat dy * animation )
+
+        _ ->
+            ( 0, 0 )
 
 
 animateStructureDmg : Color.Color -> Model -> Entity -> Color.Color
