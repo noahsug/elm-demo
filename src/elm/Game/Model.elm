@@ -63,6 +63,7 @@ type alias Model =
     , creepsSpawned : Int
     , gameOver : Bool
     , ticks : Int
+    , level : Int
     }
 
 

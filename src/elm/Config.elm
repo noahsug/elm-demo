@@ -49,3 +49,8 @@ creepReadyRate =
 startingCreeps : Int
 startingCreeps =
     1
+
+
+maxCreepLineLength : Int
+maxCreepLineLength =
+    5

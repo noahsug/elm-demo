@@ -14,7 +14,6 @@ import Game.Model
         , CreepType(..)
         , Action(..)
         )
-import Game.Update
 import Game.Utils exposing (directionToXY, numSpawnableCreeps)
 import Html exposing (div, h1, h3, text)
 import Html.Attributes exposing (class)
@@ -64,7 +63,7 @@ tankColor =
 
 lineColor : Color.Color
 lineColor =
-    Color.rgb 88 203 239
+    Color.rgb 88 239 88
 
 
 bombColor : Color.Color
@@ -82,6 +81,16 @@ outlineStyle =
     }
 
 
+creepLineBorderStyle =
+    { color = heroRadiusColor
+    , width = 2
+    , cap = Collage.Flat
+    , join = Collage.Smooth
+    , dashing = []
+    , dashOffset = 0
+    }
+
+
 view : Model -> Html.Html Msg
 view model =
     Html.section
@@ -91,10 +100,10 @@ view model =
                 (Screen.actualWidth model.screen)
                 (Screen.actualHeight model.screen)
                 (drawBackground model
+                    ++ maybeDrawCreepLine model
                     ++ [ drawEntity model model.game.hero ]
                     ++ List.map (drawEntity model) model.game.creeps
                     ++ List.map (drawEntity model) model.game.structures
-                    ++ maybeDrawCreepLine model
                 )
             )
         , drawTextOverlay model
@@ -122,7 +131,7 @@ drawTextOverlay model =
             div
                 [ class "overlay" ]
                 [ h1 [] [ text "Kill the Square" ]
-                , h3 [] [ text "click to start" ]
+                , h3 [] [ text "click to spawn circles" ]
                 ]
 
         Playing ->
@@ -160,6 +169,22 @@ maybeDrawCreepLine model =
 
         _ ->
             []
+
+
+-- drawCreepLineBorder : Model -> Collage.Form
+-- drawCreepLineBorder model =
+--     let
+--         y =
+--             gridToActual model (toFloat Config.heroRadius + 0.5)
+--
+--         x1 =
+--             gridToActual model 0
+--
+--         x2 =
+--             gridToActual model (toFloat maxCreeps - 1 + 0.65 + 1/3)
+--     in
+--         Collage.path [ ( x1, y ), ( x2, y ) ]
+--             |> Collage.traced creepLineBorderStyle
 
 
 drawCreepLine : Model -> List Collage.Form

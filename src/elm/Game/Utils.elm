@@ -140,17 +140,22 @@ isBlock entity =
             False
 
 
+maxPossibleSpawnedCreeps : Model -> Int
+maxPossibleSpawnedCreeps model =
+    model.ticks
+        // Config.creepReadyRate
+        - model.creepsSpawned
+        + Config.startingCreeps
+
+
 numSpawnableCreeps : Model -> Int
 numSpawnableCreeps model =
-    --List.length model.creepLine
-    let
-        ready =
-            model.ticks
-                // Config.creepReadyRate
-                - model.creepsSpawned
-                + Config.startingCreeps
-    in
-        min ready (List.length model.creepLine)
+    min
+        (min
+            (maxPossibleSpawnedCreeps model)
+            (List.length model.creepLine)
+        )
+        Config.maxCreepLineLength
 
 
 closestEntity : List Entity -> Int -> Int -> Maybe ( Int, Entity )
@@ -180,8 +185,10 @@ canExplode entity =
     case entity.kind of
         Creep Bomb ->
             True
+
         _ ->
             False
+
 
 isDead : Entity -> Bool
 isDead entity =

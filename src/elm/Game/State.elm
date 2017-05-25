@@ -1,11 +1,12 @@
 module Game.State exposing (init, update, spawnCreep)
 
-import Game.Utils exposing (numSpawnableCreeps)
+import Config
 import Game.Creep as Creep
 import Game.Hero as Hero
 import Game.Model exposing (..)
 import Game.Structure as Structure
 import Game.Update as Update
+import Game.Utils exposing (numSpawnableCreeps, maxPossibleSpawnedCreeps)
 
 
 init : Model
@@ -14,51 +15,67 @@ init =
     , creeps = []
     , structures = []
     , creepLine =
-        [ Creep.create Bomb
+        [ Creep.create Tank
+        , Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Dmg
+        , Creep.create Dmg
+        , Creep.create Tank
+        , Creep.create Dmg
         , Creep.create Bomb
+        , Creep.create Tank
         , Creep.create Bomb
-        , Creep.create Bomb
+        , Creep.create Dmg
         , Creep.create Line
         , Creep.create Tank
-        , Creep.create Tank
+        , Creep.create Line
+        , Creep.create Dmg
+        , Creep.create Bomb
+        , Creep.create Line
+        , Creep.create Bomb
         , Creep.create Tank
         , Creep.create Dmg
-        , Creep.create Tank
-        , Creep.create Dmg
-        , Creep.create Dmg
-        , Creep.create Tank
-        , Creep.create Tank
-        , Creep.create Tank
-        , Creep.create Dmg
-        , Creep.create Tank
-        , Creep.create Dmg
-        , Creep.create Dmg
-        , Creep.create Tank
-        , Creep.create Tank
-        , Creep.create Tank
-        , Creep.create Dmg
-        , Creep.create Tank
-        , Creep.create Dmg
-        , Creep.create Dmg
-        , Creep.create Tank
-        , Creep.create Tank
+        , Creep.create Bomb
+        , Creep.create Bomb
         ]
     , creepsSpawned = 0
     , gameOver = False
     , ticks = 0
+    , level = 0
     }
 
 
 update : Model -> Model
 update model =
     model
-        --|> spawnCreeps
+        |> checkMaxCreeps
         |> Update.execute
         |> makeHeroChoice
         |> makeCreepChoices
         |> makeStructureChoices
         |> Update.resolve
         |> tick
+
+
+checkMaxCreeps : Model -> Model
+checkMaxCreeps model =
+    let
+        maxPossible =
+            maxPossibleSpawnedCreeps model
+
+        spawnedOrInLine =
+            numSpawnableCreeps model + model.creepsSpawned
+    in
+        if spawnedOrInLine < maxPossible then
+            { model
+                | creepsSpawned = model.creepsSpawned + 1
+                , creepLine =
+                    model.creepLine
+                        |> List.take (List.length model.creepLine - 1)
+            }
+        else
+            model
 
 
 tick : Model -> Model

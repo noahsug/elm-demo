@@ -192,6 +192,7 @@ doChoice model choice =
     let
         hero =
             model.hero
+
     in
         { hero | action = choice.action, direction = choice.direction }
 

@@ -11,7 +11,7 @@ create structureType =
         { health, dmg } =
             case structureType of
                 Block ->
-                    { health = 3, dmg = 0 }
+                    { health = 5, dmg = 0 }
 
                 Turret ->
                     { health = 1, dmg = 1 }
